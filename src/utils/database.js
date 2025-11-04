@@ -2,6 +2,11 @@
  * Utilitaires pour la gestion de l'authentification
  */
 
+// Configuration de l'API
+export const API_CONFIG = {
+  BASE_URL: 'https://sogetrag.com/apistage/post_api.php'
+}
+
 // Clés pour le stockage local
 const STORAGE_KEYS = {
   USER_MATRICULE: 'user_matricule',

@@ -88,6 +88,11 @@ const editor = ref(null)
 const isFocused = ref(false)
 const formatState = ref(0) // Variable pour forcer la réactivité
 
+// Exposer l'éditeur pour permettre l'accès depuis le parent
+defineExpose({
+  editor
+})
+
 // S'assurer que la ref est correctement initialisée
 onMounted(() => {
   if (editor.value) {

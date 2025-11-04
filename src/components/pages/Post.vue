@@ -277,7 +277,7 @@ const showMobileMenu = ref(false)
 const posts = reactive([])
 const loading = ref(false)
 
-const API_BASE_URL = 'https://sogetrag.com/api/comments.php'
+const API_BASE_URL = 'https://sogetrag.com/apistage/post_api.php'
 
 const loadPosts = async () => {
   loading.value = true

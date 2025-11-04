@@ -1,13 +1,17 @@
 <template>
   <div class="main-container">
-            <div class="create-post-input-container" @click="openPublishModal">
-
-              <div class="create-post-input">
-
-                {{ currentUser.full_name ? `Exprimez-vous, ${currentUser.full_name.split(' ')[0]}...` : 'Exprimez-vous...' }}
-
+            <!-- Zone de création de post style Facebook -->
+            <div class="create-post-card">
+              <div class="create-post-header">
+                <img :src="currentUser.photo_url || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'" 
+                     :alt="currentUser.full_name" 
+                     class="create-post-avatar">
+                <div class="create-post-input-wrapper" @click="openPublishModal">
+                  <div class="create-post-input">
+                    {{ currentUser.full_name ? 'Exprimez-vous, ' + currentUser.full_name.split(' ')[0] + '...' : 'Exprimez-vous...' }}
+                  </div>
+                </div>
               </div>
-
             </div>
 
 
@@ -17,7 +21,7 @@
 
         <div class="posts-feed">
 
-          <article v-for="post in posts" :key="post.id" class="post-card">
+          <article v-for="post in filteredPosts" :key="post.id" class="post-card">
 
             <div class="post-header">
 
@@ -33,45 +37,35 @@
 
               </div>
 
-              <div v-if="isPostOwner(post)" class="post-menu">
-
+              <div class="post-menu">
                 <button class="post-menu-btn" @click="togglePostMenu(post)">⋯</button>
-
                 <div v-if="post.showMenu" class="post-menu-dropdown">
-
+                  <!-- Options pour le propriétaire du post -->
                   <div v-if="isPostOwner(post)" class="menu-item" @click="editPost(post)">
-
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-
                     </svg>
-
                     Modifier
-
                   </div>
-
                   <div v-if="isPostOwner(post)" class="menu-item delete" @click="deletePost(post)">
-
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-
                       <polyline points="3,6 5,6 21,6"></polyline>
-
                       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-
                       <line x1="10" y1="11" x2="10" y2="17"></line>
-
                       <line x1="14" y1="11" x2="14" y2="17"></line>
-
                     </svg>
-
                     Supprimer
-
                   </div>
-
-
+                  <!-- Option pour signaler le post (si ce n'est pas le propriétaire) -->
+                  <div v-if="!isPostOwner(post)" class="menu-item" @click="reportPost(post)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="8" x2="12" y2="12"></line>
+                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    Signaler
+                  </div>
                 </div>
               </div>
 
@@ -443,215 +437,140 @@
 
 
 
-    <!-- Modale de publication enrichie -->
-
+    <!-- Modale de publication moderne style Facebook -->
     <div v-if="showPublishModal" class="publish-modal-overlay" @click="closePublishModal">
-
       <div class="publish-modal" @click.stop>
-
+        <!-- Header de la modale -->
         <div class="modal-header">
-
-          <h2>Créer une publication</h2>
-
-          <button @click="closePublishModal" class="close-btn">x</button>
-
+          <h2 class="modal-title">Créer une publication</h2>
+          <button @click="closePublishModal" class="close-btn">✕</button>
         </div>
 
-
-
+        <!-- Informations utilisateur -->
         <div v-if="userProfileLoaded" class="modal-user-info">
-
-          <img :src="currentUser.photo_url" class="modal-avatar">
-
-          <div>
-
-            <h4>{{ currentUser.full_name }}</h4>
-
-            <select class="privacy-select">
-
-              <option>🌍 Public</option>
-
-              <option>👥 Amis</option>
-
+          <img :src="currentUser.photo_url || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'" 
+               :alt="currentUser.full_name" 
+               class="modal-avatar">
+          <div class="modal-user-details">
+            <h4>{{ currentUser.full_name || 'Utilisateur AEEMCI' }}</h4>
+            <select v-model="privacyLevel" class="privacy-select">
+              <option value="public">🌍 Public</option>
+              <option value="friends">👥 Amis</option>
+              <option value="private">🔒 Privé</option>
             </select>
-
           </div>
-
         </div>
 
-
-
-        <div class="modal-toolbar">
-
-          <button @click="formatText('bold')" class="tool-btn">B</button>
-
-          <button @click="formatText('italic')" class="tool-btn">I</button>
-
-          <button @click="formatText('underline')" class="tool-btn">U</button>
-
-          <div class="color-options">
-
-            <button v-for="color in backgroundColors" :key="color" 
-
-                    @click="setBackgroundColor(color)" 
-
-                    class="color-btn" 
-
-                    :style="{ backgroundColor: color }"></button>
-
-          </div>
-
-        </div>
-
-
-
-        <!-- Zone de médias séparée -->
-
-        <div v-if="selectedMedia.length > 0" class="media-preview-section">
-
-          <div class="media-preview-header">
-
-            <h4>Médias ajoutés</h4>
-
-            <button @click="clearAllMedia" class="clear-all-btn">Tout supprimer</button>
-
-          </div>
-
-          <div class="media-preview-grid">
-
-            <div v-for="(media, index) in selectedMedia" :key="index" class="media-preview-item">
-
-              <div class="media-preview-container">
-
-                <img v-if="media.type === 'image'" :src="media.url" class="media-preview" />
-
-                <video v-else-if="media.type === 'video'" :src="media.url" class="media-preview" controls></video>
-
-                <button @click="removeMedia(index)" class="remove-media-btn">x</button>
-
-              </div>
-
-              <div class="media-caption-section">
-
-                <input 
-
-                  v-model="media.caption" 
-
-                  type="text" 
-
-                  placeholder="Ajouter une légende..." 
-
-                  class="media-caption-input"
-
-                  @input="updateModalContent"
-
-                  @focus="handleCaptionFocus(index)"
-
-                  @blur="handleCaptionBlur()"
-
-                  @click="handleCaptionFocus(index)"
-
-                  :ref="el => setCaptionRef(el, index)"
-
-                >
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-
-        <div class="modal-editor">
-
-          <div 
-
-            ref="modalEditor"
-
-            class="modal-editor-content" 
-
-            contenteditable="true" 
-
-            @input="updateModalContent"
-
+        <!-- Éditeur WYSIWYG -->
+        <div class="modal-editor-wrapper">
+          <WysiwygEditor
+            ref="wysiwygEditorRef"
+            v-model="publishContent"
             :placeholder="selectedMedia.length > 0 ? 'Ajouter un commentaire (optionnel)...' : 'Que voulez-vous partager ?'"
-
-          ></div>
-
+            :min-height="selectedMedia.length > 0 ? '150px' : '250px'"
+            @focus="handleTextEditorFocus"
+            @blur="handleTextEditorBlur"
+          />
         </div>
 
-
-
-        <div class="modal-actions">
-
-          <button @click="addMedia" class="modal-action-btn">Média</button>
-
-          <button @click="addEmoji" class="modal-action-btn">Émoji</button>
-
-          <button @click="addLocation" class="modal-action-btn">Lieu</button>
-
-        </div>
-
-
-
-        <div class="modal-footer">
-
-          <div class="character-count">{{ publishContent.length }}/5000</div>
-
-          <button @click="publishFromModal" class="publish-btn" :disabled="!publishContent.trim() && selectedMedia.length === 0">
-
-            {{ isUploading ? 'Publication...' : 'Publier' }}
-
-          </button>
-
-        </div>
-
-
-
-        <!-- Sélecteur d'émojis dans la modale -->
-
-        <div v-if="showEmojiPicker" class="emoji-picker-modal">
-
-          <div class="emoji-picker-header">
-
-            <h4>Choisir un emoji</h4>
-
-            <div class="emoji-target-indicator">
-
-              <span v-if="focusedCaptionIndex >= 0" class="target-media">📷 Légende du média {{ focusedCaptionIndex + 1 }}</span>
-
-              <span v-else class="target-text">📝 Texte principal</span>
-
+        <!-- Zone de prévisualisation des médias -->
+        <div v-if="selectedMedia.length > 0" class="media-preview-section">
+          <div class="media-preview-header">
+            <h4>Médias ({{ selectedMedia.length }})</h4>
+            <button @click="clearAllMedia" class="clear-all-btn">Tout supprimer</button>
+          </div>
+          <div class="media-preview-grid">
+            <div v-for="(media, index) in selectedMedia" :key="index" class="media-preview-item">
+              <div class="media-preview-container">
+                <img v-if="media.type === 'image'" :src="media.url" class="media-preview" alt="Preview" />
+                <video v-else-if="media.type === 'video'" :src="media.url" class="media-preview" controls></video>
+                <button @click="removeMedia(index)" class="remove-media-btn" title="Supprimer">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+              <div class="media-caption-section">
+                <textarea 
+                  v-model="media.caption" 
+                  placeholder="Ajouter une légende pour ce média..." 
+                  class="media-caption-input"
+                  rows="2"
+                  maxlength="200"
+                ></textarea>
+                <div class="caption-char-count">{{ (media.caption || '').length }}/200</div>
+              </div>
             </div>
-
-            <button @click="showEmojiPicker = false" class="close-emoji-btn">x</button>
-
           </div>
-
-          <div class="emoji-grid">
-
-            <button v-for="emoji in emojis" :key="emoji" @click="insertEmoji(emoji)" class="emoji-btn">
-
-              {{ emoji }}
-
-            </button>
-
-          </div>
-
-          <div class="emoji-picker-footer">
-
-            <button @click="showEmojiPicker = false" class="emoji-done-btn">Terminé</button>
-
-          </div>
-
         </div>
 
-      </div>
+        <!-- Actions de la modale -->
+        <div class="modal-actions">
+          <button @click="triggerMediaUpload" class="modal-action-btn photo-action">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            <span>Photo/Vidéo</span>
+          </button>
+          <button @click="showEmojiPicker = !showEmojiPicker" class="modal-action-btn emoji-action">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+              <line x1="9" y1="9" x2="9.01" y2="9"></line>
+              <line x1="15" y1="9" x2="15.01" y2="9"></line>
+            </svg>
+            <span>Émoji</span>
+          </button>
+          <button @click="showLocationModal = true" class="modal-action-btn location-action">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            <span>Lieu</span>
+          </button>
+        </div>
 
+        <!-- Footer de la modale -->
+        <div class="modal-footer">
+          <div class="character-count">{{ getTextLength(publishContent) }}/5000</div>
+          <button 
+            @click="publishFromModal" 
+            class="publish-btn" 
+            :disabled="(!getPlainText(publishContent).trim() && selectedMedia.length === 0) || isUploading"
+            :class="{ 'publishing': isUploading }"
+          >
+            {{ isUploading ? 'Publication...' : 'Publier' }}
+          </button>
+        </div>
+
+        <!-- Sélecteur d'émojis -->
+        <div v-if="showEmojiPicker" class="emoji-picker-container">
+          <div class="emoji-grid">
+            <button 
+              v-for="emoji in emojis" 
+              :key="emoji" 
+              @click="insertEmoji(emoji)" 
+              class="emoji-btn"
+            >
+              {{ emoji }}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Input file caché pour l'upload -->
+    <input 
+      ref="fileInput" 
+      type="file" 
+      multiple 
+      accept="image/*,video/*" 
+      @change="handleFileSelect" 
+      style="display: none"
+    />
 
 
 
@@ -961,20 +880,232 @@
 <script setup>
 
 import { ref, reactive, onMounted, computed } from 'vue'
+import WysiwygEditor from '../common/WysiwygEditor.vue'
 
-import { getCurrentUserMatricule } from '../../utils/auth.js'
+// ============================================
+// CODE INTÉGRÉ - UTILITAIRES D'AUTHENTIFICATION
+// ============================================
+const STORAGE_KEYS = {
+  USER_MATRICULE: 'user_matricule',
+  USER_DATA: 'user_data',
+  SESSION_TOKEN: 'session_token'
+}
 
-import { useUserStore } from '../../stores/user.js'
+const getCurrentUserMatricule = () => {
+  return sessionStorage.getItem(STORAGE_KEYS.USER_MATRICULE) || 
+         localStorage.getItem(STORAGE_KEYS.USER_MATRICULE)
+}
 
-import { getUserByMatricule, REAL_POSTS } from '../../data/users.js'
+// ============================================
+// CODE INTÉGRÉ - CONFIGURATION API
+// ============================================
+const API_CONFIG = {
+  BASE_URL: 'https://sogetrag.com/apistage/post_api.php', // API distante
+  TIMEOUT: 15000, // 15 secondes pour serveur distant
+  RETRY_ATTEMPTS: 2,
+  RETRY_DELAY: 1000 // 1 seconde
+}
 
-import { API_CONFIG } from '../../utils/database.js'
+// ============================================
+// CODE INTÉGRÉ - DONNÉES UTILISATEURS
+// ============================================
+const REAL_USERS = {
+  'MOUSTAPHA_OUAGA': {
+    matricule: 'MO2024001',
+    nom: 'OUAGA',
+    prenom: 'MOUSTAPHA',
+    full_name: 'MOUSTAPHA OUAGA',
+    email: 'moustapha.ouaga@aeemci.org',
+    photo_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png',
+    ville: 'BELIER',
+    telephone: '+225 07 XX XX XX XX',
+    role: 'Président CE_CE',
+    bio: 'Président du Conseil Exécutif - Centre d\'Excellence. Passionné par l\'éducation islamique et le développement communautaire.',
+    posts_count: 12,
+    likes_received: 45,
+    comments_received: 28,
+    status: 'active',
+    date_inscription: '2024-01-15'
+  },
+  'AMINATA_KONE': {
+    matricule: 'AK2024002',
+    nom: 'KONE',
+    prenom: 'AMINATA',
+    full_name: 'Dr. AMINATA KONE',
+    email: 'aminata.kone@aeemci.org',
+    photo_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png',
+    ville: 'Abidjan',
+    telephone: '+225 05 XX XX XX XX',
+    role: 'Directrice Académique',
+    bio: 'Docteure en Sciences Islamiques. Spécialisée dans les méthodologies d\'enseignement moderne.',
+    posts_count: 8,
+    likes_received: 32,
+    comments_received: 19,
+    status: 'active',
+    date_inscription: '2024-02-01'
+  },
+  'IBRAHIM_TRAORE': {
+    matricule: 'IT2024003',
+    nom: 'TRAORE',
+    prenom: 'IBRAHIM',
+    full_name: 'IBRAHIM TRAORE',
+    email: 'ibrahim.traore@aeemci.org',
+    photo_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png',
+    ville: 'Bouaké',
+    telephone: '+225 01 XX XX XX XX',
+    role: 'Étudiant Niveau 3',
+    bio: 'Étudiant passionné en Sciences Islamiques. Futur enseignant.',
+    posts_count: 5,
+    likes_received: 18,
+    comments_received: 12,
+    status: 'active',
+    date_inscription: '2024-03-10'
+  }
+}
+
+const getUserByMatricule = (matricule) => {
+  // Rechercher dans tous les utilisateurs
+  for (const [key, user] of Object.entries(REAL_USERS)) {
+    if (user.matricule === matricule) {
+      return user
+    }
+  }
+  
+  // Si pas trouvé, retourner MOUSTAPHA OUAGA par défaut
+  return REAL_USERS.MOUSTAPHA_OUAGA
+}
+
+const REAL_POSTS = [
+  {
+    id: 1,
+    content: "Bienvenue sur notre nouvelle plateforme AEEMCI ! 🎉\n\nNous sommes ravis de vous présenter cette nouvelle interface qui permettra à notre communauté de mieux échanger et partager nos expériences académiques et spirituelles.\n\nCette plateforme facilitera la communication entre étudiants, enseignants et administrateurs.",
+    author: REAL_USERS.MOUSTAPHA_OUAGA,
+    timestamp: "Il y a 2 heures",
+    reactions: 24,
+    comments: [],
+    shares: 8,
+    showComments: false,
+    isLiked: false,
+    location: "BELIER",
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: 2,
+    content: "Excellente session de formation aujourd'hui sur les nouvelles méthodologies d'enseignement islamique ! 📚✨\n\nMerci à tous les participants pour leur engagement exceptionnel. L'éducation reste notre priorité absolue.\n\n#formation #enseignement #aeemci",
+    author: REAL_USERS.AMINATA_KONE,
+    timestamp: "Il y a 4 heures",
+    reactions: 18,
+    comments: [],
+    shares: 3,
+    showComments: false,
+    isLiked: true,
+    location: "Abidjan",
+    created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: 3,
+    content: "Préparation intensive pour les examens de certification AEEMCI. Que Allah facilite nos efforts ! 🤲\n\nLes révisions se passent bien. Merci aux professeurs pour leur soutien constant.\n\n#examens #certification #dua #aeemci #etudes",
+    author: REAL_USERS.IBRAHIM_TRAORE,
+    timestamp: "Il y a 6 heures",
+    reactions: 32,
+    comments: [],
+    shares: 2,
+    showComments: false,
+    isLiked: false,
+    location: "Bouaké",
+    created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
+  }
+]
+
+// ============================================
+// FIN DU CODE INTÉGRÉ
+// ============================================
 
 // Variables réactives
 
 const searchQuery = ref('')
-
 const posts = ref([])
+
+// Fonction de recherche
+const handleSearch = () => {
+  // La recherche se fait automatiquement via computed filteredPosts
+  console.log('Recherche:', searchQuery.value)
+}
+
+// Écouter les événements de recherche depuis le header (sera ajouté dans onMounted principal)
+
+// Filtres actifs
+const activeFilters = ref({
+  images: false,
+  videos: false,
+  textOnly: false,
+  period: 'all'
+})
+
+// Fonction pour appliquer les filtres
+const applyFiltersToPosts = (filters) => {
+  activeFilters.value = { ...filters }
+}
+
+// Posts filtrés selon la recherche et les filtres
+const filteredPosts = computed(() => {
+  let filtered = posts.value
+
+  // Appliquer la recherche
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase().trim()
+    filtered = filtered.filter(post => {
+      const contentMatch = post.content?.toLowerCase().includes(query)
+      const authorMatch = post.author?.name?.toLowerCase().includes(query)
+      const roleMatch = post.author?.role?.toLowerCase().includes(query)
+      return contentMatch || authorMatch || roleMatch
+    })
+  }
+
+  // Appliquer les filtres de type de contenu
+  if (activeFilters.value.images) {
+    filtered = filtered.filter(post => {
+      return post.image || (post.media && post.media.some(m => m.type === 'image'))
+    })
+  }
+
+  if (activeFilters.value.videos) {
+    filtered = filtered.filter(post => {
+      return post.video || (post.media && post.media.some(m => m.type === 'video'))
+    })
+  }
+
+  if (activeFilters.value.textOnly) {
+    filtered = filtered.filter(post => {
+      return !post.image && !post.video && (!post.media || post.media.length === 0)
+    })
+  }
+
+  // Appliquer le filtre de période
+  if (activeFilters.value.period !== 'all') {
+    const now = new Date()
+    filtered = filtered.filter(post => {
+      if (!post.created_at && !post.timestamp) return false
+      
+      const postDate = new Date(post.created_at || post.timestamp)
+      
+      switch (activeFilters.value.period) {
+        case 'today':
+          return postDate.toDateString() === now.toDateString()
+        case 'week':
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+          return postDate >= weekAgo
+        case 'month':
+          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+          return postDate >= monthAgo
+        default:
+          return true
+      }
+    })
+  }
+
+  return filtered
+})
 
 const isUploading = ref(false)
 const uploadProgress = ref(0)
@@ -991,7 +1122,9 @@ const showEmojiPicker = ref(false)
 
 const publishContent = ref('')
 
-const modalEditor = ref(null)
+const wysiwygEditorRef = ref(null)
+const fileInput = ref(null)
+const privacyLevel = ref('public')
 
 const notifications = ref(3)
 
@@ -1057,8 +1190,6 @@ const DEVELOPMENT_MODE = false // Mode production avec API distante
 
 
 // Fonctions API
-
-const userStore = useUserStore ? useUserStore() : null
 
 // Fonction pour uploader des fichiers volumineux vers le serveur
 const uploadLargeFile = async (file, matricule) => {
@@ -1209,13 +1340,18 @@ const getUserFromSession = () => {
 
   try {
 
-    const u = userStore && userStore.user ? userStore.user : null
+    // Récupérer le matricule depuis le stockage local
+    matricule = getCurrentUserMatricule()
 
-    if (u) {
-
-      matricule = u.matricule_gen || u.matricule || u.id_membre || null
-
-    }
+    // Si on a des données utilisateur en cache, essayer de récupérer le matricule depuis là
+    try {
+      const cachedData = sessionStorage.getItem(STORAGE_KEYS.USER_DATA) || 
+                         localStorage.getItem(STORAGE_KEYS.USER_DATA)
+      if (cachedData) {
+        const u = JSON.parse(cachedData)
+        matricule = u.matricule_gen || u.matricule || u.id_membre || matricule
+      }
+    } catch (e) {}
 
   } catch (e) {}
 
@@ -1675,9 +1811,17 @@ const loadUserFeed = async () => {
 
         const result = await response.json()
 
+        console.log('📦 Résultat API (complet):', JSON.stringify(result, null, 2))
 
+        // Détecter si c'est une réponse "service actif" (métadonnées)
+        const isMetadataResponse = result && result.success && result.message && result.endpoints && !result.data
+        
+        if (isMetadataResponse) {
+          console.warn('⚠️ API a retourné des métadonnées au lieu de posts')
+          throw new Error('API a retourné des métadonnées')
+        }
 
-        if (result.success) {
+        if (result.success && result.data && Array.isArray(result.data) && result.data.length > 0) {
 
           posts.value = result.data.map(p => {
 
@@ -1819,7 +1963,18 @@ const loadUserFeed = async () => {
 
           }
 
-        } else if (API_FALLBACK_TO_MOCK) {
+        } else if (result.success && (!result.data || !Array.isArray(result.data) || result.data.length === 0)) {
+          // API a répondu avec succès mais pas de posts
+          console.log('ℹ️ API a répondu avec succès mais aucun post disponible')
+          posts.value = []
+        } else if (!result.success) {
+          // API a retourné une erreur
+          console.warn('⚠️ API a retourné une erreur:', result.error || result.message)
+          throw new Error(result.error || result.message || 'Erreur API')
+        }
+        
+        // Si on arrive ici et qu'il n'y a toujours pas de posts, activer le fallback si disponible
+        if (posts.value.length === 0 && API_FALLBACK_TO_MOCK) {
 
           // Fallback vers les données de test
 
@@ -2069,55 +2224,141 @@ const closePublishModal = () => {
 
   captionRefs.value = []  // Nettoyer les références
 
+  if (wysiwygEditorRef.value && wysiwygEditorRef.value.editor) {
+    wysiwygEditorRef.value.editor.innerHTML = ''
+  }
+
 }
 
+// Fonction pour extraire le texte brut du HTML
+const getPlainText = (html) => {
+  if (!html) return ''
+  const temp = document.createElement('div')
+  temp.innerHTML = html
+  return temp.textContent || temp.innerText || ''
+}
 
+// Fonction pour calculer la longueur du texte (sans HTML)
+const getTextLength = (html) => {
+  return getPlainText(html).length
+}
+
+// Fonction pour déclencher l'upload de médias
+const triggerMediaUpload = () => {
+  if (fileInput.value) {
+    fileInput.value.click()
+  }
+}
+
+// Fonction pour gérer la sélection de fichiers
+const handleFileSelect = async (event) => {
+  const files = Array.from(event.target.files || [])
+  
+  if (files.length === 0) return
+  
+  for (const file of files) {
+    const isImage = file.type.startsWith('image/')
+    const isVideo = file.type.startsWith('video/')
+    
+    if (!isImage && !isVideo) {
+      alert(`Le fichier ${file.name} n'est pas une image ou une vidéo`)
+      continue
+    }
+    
+    // Vérifier la taille (max 1GB pour vidéos, 10MB pour images)
+    const maxSize = isVideo ? 1024 * 1024 * 1024 : 10 * 1024 * 1024
+    if (file.size > maxSize) {
+      alert(`Le fichier ${file.name} est trop volumineux (max ${isVideo ? '1GB' : '10MB'})`)
+      continue
+    }
+    
+    // Créer une URL de prévisualisation
+    const url = URL.createObjectURL(file)
+    
+    selectedMedia.value.push({
+      type: isImage ? 'image' : 'video',
+      url: url,
+      file: file, // Conserver le fichier pour l'upload
+      caption: ''
+    })
+  }
+  
+  // Réinitialiser l'input
+  if (event.target) {
+    event.target.value = ''
+  }
+}
+
+// Fonction pour supprimer un média
+const removeMedia = (index) => {
+  const media = selectedMedia.value[index]
+  if (media && media.url && media.url.startsWith('blob:')) {
+    URL.revokeObjectURL(media.url)
+  }
+  selectedMedia.value.splice(index, 1)
+}
+
+// Fonction pour supprimer tous les médias
+const clearAllMedia = () => {
+  selectedMedia.value.forEach(media => {
+    if (media.url && media.url.startsWith('blob:')) {
+      URL.revokeObjectURL(media.url)
+    }
+  })
+  selectedMedia.value = []
+}
+
+// Fonctions pour gérer le focus/blur de l'éditeur texte
+const handleTextEditorFocus = () => {
+  // Focus sur l'éditeur WYSIWYG
+}
+
+const handleTextEditorBlur = () => {
+  // Blur de l'éditeur WYSIWYG
+}
 
 const updateModalContent = () => {
-
-  if (modalEditor.value) {
-
-    publishContent.value = modalEditor.value.innerHTML
-
+  if (wysiwygEditorRef.value && wysiwygEditorRef.value.editor) {
+    publishContent.value = wysiwygEditorRef.value.editor.innerHTML
   }
-
 }
 
 
 
+/**
+ * Fonction principale de publication de post
+ * Structure organisée en sections logiques
+ */
 const publishFromModal = async () => {
-
-  if (!publishContent.value.trim() && selectedMedia.value.length === 0) {
-
+  // ============================================
+  // SECTION 1: VALIDATION DES DONNÉES
+  // ============================================
+  const plainText = getPlainText(publishContent.value)
+  
+  if (!plainText.trim() && selectedMedia.value.length === 0) {
     alert('Veuillez ajouter du texte ou des médias')
-
     return
-
   }
 
-  
+  // Vérifier l'authentification
+  const matricule = getUserFromSession()
+  if (!matricule) {
+    alert('Erreur: Utilisateur non connecté')
+    return
+  }
 
+  // ============================================
+  // SECTION 2: TRAITEMENT DES MÉDIAS
+  // ============================================
   isUploading.value = true
 
   try {
 
-    const matricule = getUserFromSession()
-
-    if (!matricule) {
-
-      alert('Erreur: Utilisateur non connecté')
-
-      return
-
-    }
 
 
+        // Préparer le contenu avec les nouveaux médias (utiliser getPlainText pour extraire le texte)
 
-        // Préparer le contenu avec les nouveaux médias
-
-        let textContent = publishContent.value
-
-          .replace(/<[^>]*>/g, '') // Supprimer tous les tags HTML
+        let textContent = getPlainText(publishContent.value)
 
           .replace(/\s+/g, ' ') // Remplacer les espaces multiples par un seul
           .trim() // Supprimer les espaces en début/fin
@@ -2193,16 +2434,18 @@ const publishFromModal = async () => {
           textContent = captions.join(' ')
         }
 
-        // Une fois tous les uploads terminés, fermer la modale et commencer la publication
+        // ============================================
+        // SECTION 3: FERMETURE DE LA MODALE
+        // ============================================
         console.log('📤 Uploads terminés, début de la publication...')
         closePublishModal()
         showPublishingProgress.value = true
 
-    
-
-    if (DEVELOPMENT_MODE) {
-
-      // Mode développement : simuler la création de post
+        // ============================================
+        // SECTION 4: MODE DÉVELOPPEMENT (FALLBACK)
+        // ============================================
+        if (DEVELOPMENT_MODE) {
+          // Mode développement : simuler la création de post
 
           const newPost = {
 
@@ -2270,17 +2513,32 @@ const publishFromModal = async () => {
 
       return
 
-    }
+        }
 
-    
+        // ============================================
+        // SECTION 5: PUBLICATION VIA API DISTANTE
+        // ============================================
+        let response, result
 
-    // Essayer d'abord l'API distante
+        try {
+          // Préparer les données à envoyer
+          const postData = {
+            action: 'create_post',
+            matricule: matricule,
+            content: textContent,
+            images: images,
+            videos: videos,
+            captions: captions,
+            media: selectedMedia.value.map((media, index) => ({
+              type: media.type,
+              url: media.type === 'image' ? images[index] || media.url : media.url,
+              caption: media.caption
+            })),
+            location: '',
+            privacy_level: 'public'
+          }
 
-    let response, result
-
-    try {
-
-      response = await fetch(API_CONFIG.BASE_URL, {
+          response = await fetch(API_CONFIG.BASE_URL, {
 
       method: 'POST',
 
@@ -2318,53 +2576,45 @@ const publishFromModal = async () => {
 
     })
 
+          result = await response.json()
 
+          if (!result.success) {
+            throw new Error(result.error || 'Erreur API distante')
+          }
 
-      result = await response.json()
+          console.log('✅ Post créé via API distante')
 
-      
+        } catch (error) {
+          console.error('🚨 Erreur API:', error)
+          
+          // Vérifier si c'est une erreur de taille de paquet
+          if (error.message && error.message.includes('max_allowed_packet')) {
+            throw new Error('Image trop volumineuse. Veuillez utiliser une image plus petite.')
+          }
+          
+          throw new Error('Erreur API distante: ' + error.message)
+        }
 
-      if (!result.success) {
-
-        throw new Error(result.error || 'Erreur API distante')
-
-      }
-
-      
-
-      console.log('âœ… Post créé via API distante')
-
-      
-
-    } catch (error) {
-      console.error('🚨 Erreur API:', error)
-      
-      // Vérifier si c'est une erreur de taille de paquet
-      if (error.message && error.message.includes('max_allowed_packet')) {
-        throw new Error('Image trop volumineuse. Veuillez utiliser une image plus petite.')
-      }
-      
-      // Pas de fallback local pour forcer la vraie base
-      throw new Error('Erreur API distante: ' + error.message)
-    }
-
-    if (result.success) {
-      console.log('🎉 Post créé avec succès!')
-      
-      // Délai pour laisser le temps à la base de données de se synchroniser
-      setTimeout(async () => {
-        console.log('🔄 Rechargement des posts...')
-        await loadUserFeed()
-        
-        // Masquer l'indicateur de publication
-        showPublishingProgress.value = false
-        
-        console.log('✅ Nouveau post affiché!')
-      }, 1500) // Délai un peu plus long pour un meilleur effet visuel
-    } else {
-      showPublishingProgress.value = false
-      alert('Erreur lors de la publication: ' + result.error)
-    }
+        // ============================================
+        // SECTION 6: POST-PUBLICATION
+        // ============================================
+        if (result.success) {
+          console.log('🎉 Post créé avec succès!')
+          
+          // Délai pour laisser le temps à la base de données de se synchroniser
+          setTimeout(async () => {
+            console.log('🔄 Rechargement des posts...')
+            await loadUserFeed()
+            
+            // Masquer l'indicateur de publication
+            showPublishingProgress.value = false
+            
+            console.log('✅ Nouveau post affiché!')
+          }, 1500)
+        } else {
+          showPublishingProgress.value = false
+          alert('Erreur lors de la publication: ' + result.error)
+        }
 
     
 
@@ -2816,26 +3066,7 @@ const addMedia = () => {
 }
 
 
-
-const removeMedia = (index) => {
-
-  selectedMedia.value.splice(index, 1)
-
-  updateModalContent()
-
-}
-
-
-
-const clearAllMedia = () => {
-
-  selectedMedia.value = []
-
-  focusedCaptionIndex.value = -1
-
-  updateModalContent()
-
-}
+// Les fonctions removeMedia et clearAllMedia sont déjà définies plus haut
 
 
 
@@ -2961,23 +3192,66 @@ const insertEmoji = (emoji) => {
 
   
 
-  // SINON: Insérer dans l'éditeur principal de texte
+  // SINON: Insérer dans l'éditeur WYSIWYG principal
 
-  if (modalEditor.value) {
+  if (wysiwygEditorRef.value && wysiwygEditorRef.value.editor) {
 
-    modalEditor.value.focus()
+    const editorElement = wysiwygEditorRef.value.editor
 
-    document.execCommand('insertText', false, emoji)
+    editorElement.focus()
+
+    
+    const selection = window.getSelection()
+
+    if (selection.rangeCount > 0) {
+
+      const range = selection.getRangeAt(0)
+
+      range.deleteContents()
+
+      range.insertNode(document.createTextNode(emoji))
+
+      range.collapse(false)
+
+      selection.removeAllRanges()
+
+      selection.addRange(range)
+
+    } else {
+
+      const textNode = document.createTextNode(emoji)
+
+      editorElement.appendChild(textNode)
+
+      const range = document.createRange()
+
+      range.selectNodeContents(textNode)
+
+      range.collapse(false)
+
+      selection.removeAllRanges()
+
+      selection.addRange(range)
+
+    }
+
+    
+
+    publishContent.value = editorElement.innerHTML
 
     updateModalContent()
 
     
 
-    console.log('✅ Emoji inséré dans le texte principal')
+    console.log('✅ Emoji inséré dans le texte principal WYSIWYG')
 
   } else {
 
-    console.error('❌ Aucun éditeur disponible pour insérer l\'emoji')
+    console.error('❌ Aucun éditeur WYSIWYG disponible pour insérer l\'emoji')
+
+    // Fallback: ajouter directement au contenu
+
+    publishContent.value += emoji
 
   }
 
@@ -3833,13 +4107,57 @@ const addLocation = () => {
 
 const insertLocation = () => {
 
-  if (locationInput.value.trim() && modalEditor.value) {
+  if (locationInput.value.trim() && wysiwygEditorRef.value && wysiwygEditorRef.value.editor) {
 
-    modalEditor.value.focus()
+    const editorElement = wysiwygEditorRef.value.editor
 
-    const locationElement = `<div class="location-tag">📍 ${locationInput.value}</div>`
+    editorElement.focus()
 
-    document.execCommand('insertHTML', false, locationElement)
+    
+
+    const locationText = `📍 ${locationInput.value} `
+
+    
+
+    const selection = window.getSelection()
+
+    if (selection.rangeCount > 0) {
+
+      const range = selection.getRangeAt(0)
+
+      range.deleteContents()
+
+      const textNode = document.createTextNode(locationText)
+
+      range.insertNode(textNode)
+
+      range.collapse(false)
+
+      selection.removeAllRanges()
+
+      selection.addRange(range)
+
+    } else {
+
+      const textNode = document.createTextNode(locationText)
+
+      editorElement.appendChild(textNode)
+
+      const range = document.createRange()
+
+      range.selectNodeContents(textNode)
+
+      range.collapse(false)
+
+      selection.removeAllRanges()
+
+      selection.addRange(range)
+
+    }
+
+    
+
+    publishContent.value = editorElement.innerHTML
 
     updateModalContent()
 
@@ -3969,6 +4287,16 @@ const isPostOwner = (post) => {
   
   // Comparer les matricules
   return currentMatricule && postAuthorMatricule && currentMatricule === postAuthorMatricule
+}
+
+// Fonction pour signaler un post
+const reportPost = (post) => {
+  post.showMenu = false
+  if (confirm(`Voulez-vous signaler cette publication de ${post.author.name} ?`)) {
+    // TODO: Implémenter l'API de signalement
+    console.log('Post signalé:', post.id)
+    alert('Merci pour votre signalement. Nous examinerons cette publication.')
+  }
 }
 
 const deletePost = (post) => {
@@ -4249,9 +4577,19 @@ const logout = () => {
 
 
 onMounted(async () => {
+  // Écouter les événements de recherche depuis le header
+  window.addEventListener('search-posts', (event) => {
+    searchQuery.value = event.detail
+    console.log('Recherche depuis header:', event.detail)
+  })
+
+  // Écouter les événements de filtres depuis le header
+  window.addEventListener('apply-filters', (event) => {
+    applyFiltersToPosts(event.detail)
+    console.log('Filtres appliqués:', event.detail)
+  })
 
   // Ajouter l'écouteur pour fermer le menu profil
-
   document.addEventListener('click', handleClickOutside)
 
   
@@ -4335,15 +4673,10 @@ div[contenteditable]:focus {
 
 
 /* Barre de recherche personnalisée */
-
 .search-container-custom {
-
   position: relative;
-
-  margin: 1rem;
-
-  display: none;
-
+  margin: 1rem 0;
+  display: block;
 }
 
 
@@ -4381,21 +4714,14 @@ div[contenteditable]:focus {
 
 
 .search-icon-custom {
-
   position: absolute;
-
   left: 12px;
-
   top: 50%;
-
   transform: translateY(-50%);
-
-  width: 16px;
-
-  height: 16px;
-
+  width: 18px;
+  height: 18px;
   color: #65676b;
-
+  pointer-events: none;
 }
 
 
@@ -5145,23 +5471,104 @@ div[contenteditable]:focus {
 
 }
 
-.create-post-input-container {
+/* Zone de création de post style Facebook */
+.create-post-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+.create-post-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.create-post-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.create-post-input-wrapper {
   flex: 1;
 }
 
 .create-post-input {
   background: #f0f2f5;
+  border: 1px solid #e4e6ea;
   border-radius: 24px;
-  padding: 12px 16px;
+  padding: 10px 16px;
   color: #65676b;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
   width: 100%;
-  font-size: 16px;
+  font-size: 15px;
+  outline: none;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
 }
 
 .create-post-input:hover {
   background: #e4e6ea;
+  border-color: #d8dadf;
+}
+
+.create-post-input:focus {
+  background: white;
+  border-color: #1877f2;
+  box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.1);
+}
+
+.create-post-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e4e6ea;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: #65676b;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background: #f0f2f5;
+  color: #1877f2;
+}
+
+.action-btn svg {
+  flex-shrink: 0;
+}
+
+.photo-btn:hover {
+  color: #45bd62;
+}
+
+.video-btn:hover {
+  color: #f02849;
+}
+
+.feeling-btn:hover {
+  color: #f7b928;
 }
 
 /* ... */
@@ -5244,13 +5651,13 @@ div[contenteditable]:focus {
   top: 100%;
   right: 0;
   background: white;
-  border: 1px solid #e4e6ea;
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  padding: 8px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   min-width: 180px;
   z-index: 1000;
-  margin-top: 4px;
+  margin-top: 8px;
+  overflow: hidden;
+  padding: 8px 0;
 }
 
 .menu-item {
@@ -5917,6 +6324,357 @@ div[contenteditable]:focus {
 .close-btn:hover {
   background: #f0f2f5;
   color: #050505;
+}
+
+/* Styles pour la modale de publication moderne */
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e4e6ea;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #050505;
+  margin: 0;
+}
+
+.modal-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e4e6ea;
+}
+
+.modal-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.modal-user-details {
+  flex: 1;
+}
+
+.modal-user-details h4 {
+  margin: 0 0 4px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #050505;
+}
+
+.privacy-select {
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: #65676b;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.privacy-select:hover {
+  background: #f0f2f5;
+}
+
+.modal-editor-wrapper {
+  padding: 16px 20px;
+  min-height: 200px;
+}
+
+/* Zone de prévisualisation des médias */
+.media-preview-section {
+  padding: 16px 20px;
+  border-top: 1px solid #e4e6ea;
+  border-bottom: 1px solid #e4e6ea;
+  background: #f8f9fa;
+}
+
+.media-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.media-preview-header h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #050505;
+}
+
+.clear-all-btn {
+  background: none;
+  border: none;
+  color: #1877f2;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.clear-all-btn:hover {
+  background: #e4e6eb;
+}
+
+.media-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.media-preview-item {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.media-preview-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #000;
+}
+
+.media-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.media-preview video {
+  width: 100%;
+  height: 100%;
+}
+
+.remove-media-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.2s;
+  z-index: 5;
+}
+
+.remove-media-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
+}
+
+.media-caption-section {
+  padding: 12px;
+}
+
+.media-caption-input {
+  width: 100%;
+  border: 1px solid #e4e6ea;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 60px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.media-caption-input:focus {
+  border-color: #1877f2;
+  box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.1);
+}
+
+.caption-char-count {
+  font-size: 12px;
+  color: #65676b;
+  text-align: right;
+  margin-top: 4px;
+}
+
+/* Actions de la modale */
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid #e4e6ea;
+  border-bottom: 1px solid #e4e6ea;
+}
+
+.modal-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: #65676b;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-action-btn:hover {
+  background: #f0f2f5;
+}
+
+.photo-action:hover {
+  color: #45bd62;
+}
+
+.emoji-action:hover {
+  color: #f7b928;
+}
+
+.location-action:hover {
+  color: #1877f2;
+}
+
+.modal-action-btn svg {
+  flex-shrink: 0;
+}
+
+/* Footer de la modale */
+.modal-footer {
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #e4e6ea;
+  position: sticky;
+  bottom: 0;
+  background: white;
+  border-radius: 0 0 12px 12px;
+}
+
+.character-count {
+  font-size: 13px;
+  color: #65676b;
+}
+
+.publish-btn {
+  background: #1877f2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 100px;
+}
+
+.publish-btn:hover:not(:disabled) {
+  background: #166fe5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(24, 119, 242, 0.3);
+}
+
+.publish-btn:disabled {
+  background: #e4e6eb;
+  color: #bcc0c4;
+  cursor: not-allowed;
+}
+
+.publish-btn.publishing {
+  background: #1877f2;
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* Sélecteur d'émojis */
+.emoji-picker-container {
+  padding: 16px 20px;
+  border-top: 1px solid #e4e6ea;
+  background: #f8f9fa;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 8px;
+}
+
+.emoji-btn {
+  background: white;
+  border: 1px solid #e4e6ea;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emoji-btn:hover {
+  background: #f0f2f5;
+  border-color: #1877f2;
+  transform: scale(1.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .create-post-actions {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .action-btn {
+    justify-content: flex-start;
+  }
+  
+  .media-preview-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .publish-modal {
+    max-width: 100%;
+    margin: 0;
+    border-radius: 0;
+    max-height: 100vh;
+  }
+  
+  .modal-header {
+    border-radius: 0;
+  }
+  
+  .modal-footer {
+    border-radius: 0;
+  }
 }
 
 </style>

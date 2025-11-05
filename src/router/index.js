@@ -19,6 +19,7 @@ import Messages from "../components/pages/Messages.vue"
 import MesLivres from "../components/pages/MesLivres.vue"
 import Avis from "../components/pages/Avis.vue"
 import MesSr from "../components/pages/MesSr.vue"
+import BureauxSr from "../components/pages/BureauxSr.vue"
 import Quiz from "../components/pages/Quiz.vue"
 import Meet from "../components/pages/Meet.vue"
 
@@ -41,6 +42,8 @@ const routes = [
   { path: "/mes_livres", name: "mes_livres", component: MesLivres },
   { path: "/avis", name: "avis", component: Avis },
   { path: "/mes_sr", name: "mes_sr", component: MesSr },
+  { path: "/bureaux_sr", name: "bureaux_sr", component: BureauxSr },
+  { path: "/BureauxSr", redirect: "/bureaux_sr" }, // Alias pour compatibilité
   { path: "/meet", name: "meet", component: Meet },
 ]
 

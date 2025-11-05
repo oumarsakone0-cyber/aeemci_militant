@@ -5,7 +5,8 @@
               <div class="create-post-header">
                 <img :src="currentUser.photo_url || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'" 
                      :alt="currentUser.full_name" 
-                     class="create-post-avatar">
+                     class="create-post-avatar"
+                     @error="handleImageError">
                 <div class="create-post-input-wrapper" @click="openPublishModal">
                   <div class="create-post-input">
                     {{ currentUser.full_name ? 'Exprimez-vous, ' + currentUser.full_name.split(' ')[0] + '...' : 'Exprimez-vous...' }}
@@ -25,7 +26,7 @@
 
             <div class="post-header">
 
-              <img :src="post.author.avatar" :alt="post.author.name" class="post-avatar">
+              <img :src="post.author.avatar" :alt="post.author.name" class="post-avatar" @error="handleImageError">
 
               <div class="post-author-info">
 
@@ -210,7 +211,9 @@
 
                 <button class="post-action-btn" @click="shareOnWhatsApp(post)">
 
-                  <span class="action-icon">🔄</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="whatsapp-icon">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" fill="#25D366"/>
+                  </svg>
 
                   Partager
 
@@ -228,7 +231,7 @@
 
               <div v-if="userProfileLoaded" class="comment-input-container">
 
-                <img :src="currentUser.photo_url" class="comment-avatar">
+                <img :src="currentUser.photo_url" class="comment-avatar" @error="handleImageError">
 
                 <input 
 
@@ -252,7 +255,7 @@
 
                 <div v-for="(comment, index) in (post.comments || []).filter(c => c).slice().reverse().slice(0, post.visibleCommentsCount || 5)" :key="comment?.id || index" class="comment">
 
-                  <img :src="comment?.author?.avatar || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'" class="comment-avatar">
+                  <img :src="comment?.author?.avatar || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'" class="comment-avatar" @error="handleImageError">
 
                   <div class="comment-content">
 
@@ -292,7 +295,7 @@
 
                     <div v-if="comment && comment.showReplyInput" class="reply-input-container">
 
-                      <img :src="currentUser.photo_url" class="reply-avatar">
+                      <img :src="currentUser.photo_url" class="reply-avatar" @error="handleImageError">
 
                       <input 
 
@@ -313,7 +316,7 @@
                     <!-- Affichage des réponses -->
                     <div v-if="comment && comment.replies && comment.replies.length > 0" class="replies-container">
                       <div v-for="reply in comment.replies" :key="reply.id" class="reply">
-                        <img :src="reply.author?.avatar || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'" class="reply-avatar">
+                        <img :src="reply.author?.avatar || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'" class="reply-avatar" @error="handleImageError">
                         <div class="reply-content">
 
                           <div class="reply-bubble">
@@ -352,7 +355,7 @@
 
                           <div v-if="reply.showReplyInput" class="reply-to-reply-input-container">
 
-                            <img :src="currentUser.photo_url" class="reply-avatar">
+                            <img :src="currentUser.photo_url" class="reply-avatar" @error="handleImageError">
 
                             <input 
 
@@ -378,7 +381,7 @@
 
                             <div v-for="subReply in reply.replies" :key="subReply.id" class="sub-reply">
 
-                              <img :src="subReply.author?.avatar || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'" class="reply-avatar">
+                              <img :src="subReply.author?.avatar || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'" class="reply-avatar" @error="handleImageError">
 
                               <div class="reply-content">
 
@@ -461,47 +464,53 @@
           </div>
         </div>
 
-        <!-- Éditeur WYSIWYG -->
-        <div class="modal-editor-wrapper">
-          <WysiwygEditor
-            ref="wysiwygEditorRef"
-            v-model="publishContent"
-            :placeholder="selectedMedia.length > 0 ? 'Ajouter un commentaire (optionnel)...' : 'Que voulez-vous partager ?'"
-            :min-height="selectedMedia.length > 0 ? '150px' : '250px'"
-            @focus="handleTextEditorFocus"
-            @blur="handleTextEditorBlur"
-          />
-        </div>
-
-        <!-- Zone de prévisualisation des médias -->
-        <div v-if="selectedMedia.length > 0" class="media-preview-section">
-          <div class="media-preview-header">
-            <h4>Médias ({{ selectedMedia.length }})</h4>
-            <button @click="clearAllMedia" class="clear-all-btn">Tout supprimer</button>
-          </div>
-          <div class="media-preview-grid">
-            <div v-for="(media, index) in selectedMedia" :key="index" class="media-preview-item">
-              <div class="media-preview-container">
-                <img v-if="media.type === 'image'" :src="media.url" class="media-preview" alt="Preview" />
-                <video v-else-if="media.type === 'video'" :src="media.url" class="media-preview" controls></video>
-                <button @click="removeMedia(index)" class="remove-media-btn" title="Supprimer">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
-              </div>
-              <div class="media-caption-section">
-                <textarea 
-                  v-model="media.caption" 
-                  placeholder="Ajouter une légende pour ce média..." 
-                  class="media-caption-input"
-                  rows="2"
-                  maxlength="200"
-                ></textarea>
-                <div class="caption-char-count">{{ (media.caption || '').length }}/200</div>
+        <!-- Zone principale : Médias OU Éditeur WYSIWYG -->
+        <div class="modal-main-content">
+          <!-- Si des médias sont sélectionnés, afficher les médias dans la zone principale -->
+          <div v-if="selectedMedia.length > 0" class="media-preview-section-main">
+            <div class="media-preview-header">
+              <h4>Médias ({{ selectedMedia.length }})</h4>
+              <button @click="clearAllMedia" class="clear-all-btn">Tout supprimer</button>
+            </div>
+            <div class="media-preview-grid-main">
+              <div v-for="(media, index) in selectedMedia" :key="index" class="media-preview-item-main">
+                <div class="media-preview-container-main">
+                  <img v-if="media.type === 'image'" :src="media.url" class="media-preview-main" alt="Preview" />
+                  <video v-else-if="media.type === 'video'" :src="media.url" class="media-preview-main" controls></video>
+                  <button @click="removeMedia(index)" class="remove-media-btn-main" title="Supprimer">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
+          </div>
+          
+          <!-- Si pas de médias, afficher l'éditeur WYSIWYG -->
+          <div v-else class="modal-editor-wrapper">
+            <WysiwygEditor
+              ref="wysiwygEditorRef"
+              v-model="publishContent"
+              placeholder="Que voulez-vous partager ?"
+              :min-height="'250px'"
+              @focus="handleTextEditorFocus"
+              @blur="handleTextEditorBlur"
+            />
+          </div>
+        </div>
+
+        <!-- Zone de légende/texte : UNE SEULE zone pour accompagner les médias ou le texte -->
+        <div v-if="selectedMedia.length > 0" class="media-caption-wrapper">
+          <div class="media-caption-section-main">
+            <WysiwygEditor
+              ref="mediaCaptionEditorRef"
+              v-model="publishContent"
+              placeholder="Ajouter une légende ou un commentaire pour accompagner vos médias..."
+              :min-height="'120px'"
+            />
+            <div class="caption-char-count-main">{{ getTextLength(publishContent) }}/5000</div>
           </div>
         </div>
 
@@ -515,7 +524,7 @@
             </svg>
             <span>Photo/Vidéo</span>
           </button>
-          <button @click="showEmojiPicker = !showEmojiPicker" class="modal-action-btn emoji-action">
+          <button @click="showEmojiPicker = !showEmojiPicker" class="modal-action-btn emoji-action" :class="{ 'active': showEmojiPicker }">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"></circle>
               <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
@@ -533,20 +542,7 @@
           </button>
         </div>
 
-        <!-- Footer de la modale -->
-        <div class="modal-footer">
-          <div class="character-count">{{ getTextLength(publishContent) }}/5000</div>
-          <button 
-            @click="publishFromModal" 
-            class="publish-btn" 
-            :disabled="(!getPlainText(publishContent).trim() && selectedMedia.length === 0) || isUploading"
-            :class="{ 'publishing': isUploading }"
-          >
-            {{ isUploading ? 'Publication...' : 'Publier' }}
-          </button>
-        </div>
-
-        <!-- Sélecteur d'émojis -->
+        <!-- Sélecteur d'émojis - Toujours accessible même avec des médias et légendes -->
         <div v-if="showEmojiPicker" class="emoji-picker-container">
           <div class="emoji-grid">
             <button 
@@ -558,6 +554,19 @@
               {{ emoji }}
             </button>
           </div>
+        </div>
+
+        <!-- Footer de la modale -->
+        <div class="modal-footer">
+          <div class="character-count">{{ getTextLength(publishContent) }}/5000</div>
+          <button 
+            @click="publishFromModal" 
+            class="publish-btn" 
+            :disabled="(!getPlainText(publishContent).trim() && selectedMedia.length === 0) || isUploading"
+            :class="{ 'publishing': isUploading }"
+          >
+            {{ isUploading ? 'Publication...' : 'Publier' }}
+          </button>
         </div>
       </div>
     </div>
@@ -590,30 +599,59 @@
 
         <div class="location-modal-body">
 
-          <input 
+          <!-- Sélecteur de type de localisation -->
+          <div class="location-type-selector">
+            <button 
+              @click="locationType = 'ci'"
+              :class="['location-type-btn', { active: locationType === 'ci' }]"
+            >
+              🇨🇮 Côte d'Ivoire
+            </button>
+            <button 
+              @click="locationType = 'other'"
+              :class="['location-type-btn', { active: locationType === 'other' }]"
+            >
+              🌍 Autre pays
+            </button>
+          </div>
 
-            v-model="locationInput" 
+          <!-- Sélecteur de ville pour la Côte d'Ivoire -->
+          <div v-if="locationType === 'ci'" class="location-select-container">
+            <label class="location-label">Sélectionnez une ville</label>
+            <select 
+              v-model="selectedCity"
+              class="location-select"
+            >
+              <option value="">-- Choisir une ville --</option>
+              <option v-for="city in coteIvoireCities" :key="city.value" :value="city.value">
+                {{ city.label }}
+              </option>
+            </select>
+          </div>
 
-            type="text" 
-
-            placeholder="Où êtes-vous ?" 
-
-            class="location-input"
-
-            @keyup.enter="insertLocation"
-
-          >
-
-          <div class="location-suggestions">
-
-            <button @click="locationInput = 'Paris, France'" class="location-suggestion"> Paris, France</button>
-
-            <button @click="locationInput = 'Casablanca, Maroc'" class="location-suggestion">Casablanca, Maroc</button>
-
-            <button @click="locationInput = 'Tunis, Tunisie'" class="location-suggestion">Tunis, Tunisie</button>
-
-            <button @click="locationInput = 'Alger, Algérie'" class="location-suggestion">Alger, Algérie</button>
-
+          <!-- Input pour autres pays -->
+          <div v-if="locationType === 'other'" class="location-input-container">
+            <label class="location-label">Ville, Pays</label>
+            <input 
+              v-model="locationInput" 
+              type="text" 
+              placeholder="Ex: Paris, France ou Dakar, Sénégal" 
+              class="location-input"
+              @keyup.enter="insertLocation"
+            >
+            <div class="location-suggestions">
+              <p class="suggestions-title">Suggestions :</p>
+              <div class="suggestions-grid">
+                <button @click="locationInput = 'Paris, France'" class="location-suggestion">Paris, France</button>
+                <button @click="locationInput = 'Dakar, Sénégal'" class="location-suggestion">Dakar, Sénégal</button>
+                <button @click="locationInput = 'Casablanca, Maroc'" class="location-suggestion">Casablanca, Maroc</button>
+                <button @click="locationInput = 'Tunis, Tunisie'" class="location-suggestion">Tunis, Tunisie</button>
+                <button @click="locationInput = 'Alger, Algérie'" class="location-suggestion">Alger, Algérie</button>
+                <button @click="locationInput = 'Lomé, Togo'" class="location-suggestion">Lomé, Togo</button>
+                <button @click="locationInput = 'Ouagadougou, Burkina Faso'" class="location-suggestion">Ouagadougou, Burkina Faso</button>
+                <button @click="locationInput = 'Bamako, Mali'" class="location-suggestion">Bamako, Mali</button>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -622,10 +660,12 @@
 
           <button @click="showLocationModal = false" class="cancel-btn">Annuler</button>
 
-          <button @click="insertLocation" class="add-location-btn" :disabled="!locationInput.trim()">
-
+          <button 
+            @click="insertLocation" 
+            class="add-location-btn" 
+            :disabled="!isLocationValid"
+          >
             Ajouter
-
           </button>
 
         </div>
@@ -880,6 +920,7 @@
 <script setup>
 
 import { ref, reactive, onMounted, computed } from 'vue'
+import { useUserStore } from '../../stores/user'
 import WysiwygEditor from '../common/WysiwygEditor.vue'
 
 // ============================================
@@ -1123,6 +1164,7 @@ const showEmojiPicker = ref(false)
 const publishContent = ref('')
 
 const wysiwygEditorRef = ref(null)
+const mediaCaptionEditorRef = ref(null)
 const fileInput = ref(null)
 const privacyLevel = ref('public')
 
@@ -1214,7 +1256,13 @@ const uploadLargeFile = async (file, matricule) => {
         try {
           const response = JSON.parse(xhr.responseText)
           if (response.success) {
-            resolve(response.data.url)
+            // Ajouter un timestamp pour forcer le rechargement et éviter le cache
+            let url = response.data.url
+            // Si l'URL n'a pas déjà un paramètre de cache-busting, en ajouter un
+            if (!url.includes('?t=')) {
+              url += (url.includes('?') ? '&' : '?') + 't=' + Date.now()
+            }
+            resolve(url)
           } else {
             reject(new Error(response.error || 'Erreur upload'))
           }
@@ -1335,34 +1383,111 @@ const compressImage = (file, maxWidth = 400, maxHeight = 400, quality = 0.3) => 
   })
 }
 
+// Fonction pour gérer les erreurs de chargement d'images
+const handleImageError = (event) => {
+  // Si l'image ne peut pas être chargée, utiliser l'image par défaut
+  const defaultImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
+  if (event.target && event.target.src !== defaultImage) {
+    // Remplacer par l'image par défaut pour toutes les erreurs
+    event.target.src = defaultImage
+    event.target.onerror = null // Empêcher les boucles infinies
+  }
+}
+
+// Fonction pour filtrer les URLs Cloudinary problématiques
+// Filtrer TOUTES les URLs Cloudinary pour les photos de profil car elles retournent souvent 401
+const filterCloudinaryUrl = (url) => {
+  const defaultImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
+  
+  if (!url || typeof url !== 'string') {
+    return defaultImage
+  }
+  
+  const trimmedUrl = url.trim()
+  
+  // Si vide ou null
+  if (trimmedUrl === '' || trimmedUrl === 'null' || trimmedUrl === 'NULL') {
+    return defaultImage
+  }
+  
+  // Construire l'URL complète pour les chemins relatifs
+  if (trimmedUrl.startsWith('/uploads/') || trimmedUrl.startsWith('uploads/')) {
+    const baseUrl = 'http://sogetrag.com/apistage/'
+    return baseUrl + (trimmedUrl.startsWith('/') ? trimmedUrl.substring(1) : trimmedUrl)
+  }
+  
+  // FILTRER TOUTES LES URLs CLOUDINARY pour les photos de profil
+  // Car elles retournent souvent 401 (Unauthorized)
+  if (trimmedUrl.includes('cloudinary.com') || trimmedUrl.includes('res.cloudinary')) {
+    console.warn('🚫 URL Cloudinary filtrée pour photo de profil:', trimmedUrl)
+    return defaultImage
+  }
+  
+  return trimmedUrl
+}
+
 const getUserFromSession = () => {
   let matricule = null
 
   try {
-
-    // Récupérer le matricule depuis le stockage local
-    matricule = getCurrentUserMatricule()
-
-    // Si on a des données utilisateur en cache, essayer de récupérer le matricule depuis là
+    // 1. Essayer depuis le store Pinia (première priorité)
     try {
-      const cachedData = sessionStorage.getItem(STORAGE_KEYS.USER_DATA) || 
-                         localStorage.getItem(STORAGE_KEYS.USER_DATA)
-      if (cachedData) {
-        const u = JSON.parse(cachedData)
-        matricule = u.matricule_gen || u.matricule || u.id_membre || matricule
+      const userStore = useUserStore()
+      if (userStore.user && userStore.isLoggedIn) {
+        // Extraire le matricule depuis les données utilisateur du store
+        const userData = userStore.user
+        matricule = userData.matricule_gen || userData.matricule || userData.id_membre || null
+        
+        // Si on a un matricule, le stocker dans sessionStorage pour compatibilité
+        if (matricule) {
+          try {
+            sessionStorage.setItem(STORAGE_KEYS.USER_MATRICULE, matricule)
+            if (userData) {
+              sessionStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData))
+            }
+          } catch (e) {}
+        }
       }
-    } catch (e) {}
+    } catch (e) {
+      // Store Pinia non disponible, continuer avec les autres méthodes
+      console.warn('Store Pinia non disponible:', e)
+    }
 
-  } catch (e) {}
+    // 2. Récupérer le matricule depuis le stockage local (sessionStorage/localStorage)
+    if (!matricule) {
+      matricule = getCurrentUserMatricule()
+    }
 
-  if (!matricule) matricule = getCurrentUserMatricule()
+    // 3. Si on a des données utilisateur en cache, essayer de récupérer le matricule depuis là
+    if (!matricule) {
+      try {
+        const cachedData = sessionStorage.getItem(STORAGE_KEYS.USER_DATA) || 
+                           localStorage.getItem(STORAGE_KEYS.USER_DATA)
+        if (cachedData) {
+          const u = JSON.parse(cachedData)
+          matricule = u.matricule_gen || u.matricule || u.id_membre || null
+        }
+      } catch (e) {}
+    }
 
+  } catch (e) {
+    console.error('Erreur lors de la récupération du matricule:', e)
+  }
+
+  // Dernier essai avec getCurrentUserMatricule
+  if (!matricule) {
+    matricule = getCurrentUserMatricule()
+  }
+
+  // Filtrer les valeurs de test
   if (matricule === 'TEST001') matricule = null
 
+  // Stocker le matricule trouvé pour usage futur
   if (matricule) {
-
-    try { sessionStorage.setItem('user_matricule', matricule) } catch (e) {}
-
+    try { 
+      sessionStorage.setItem('user_matricule', matricule)
+      sessionStorage.setItem(STORAGE_KEYS.USER_MATRICULE, matricule)
+    } catch (e) {}
   }
 
   return matricule
@@ -1537,13 +1662,25 @@ const loadUserProfile = async () => {
 
         if (result.success) {
 
+          // Utiliser photo_url depuis la base de données (photo_membre)
+          // Filtrer TOUTES les URLs Cloudinary car elles retournent 401 (Unauthorized)
+          let photoUrl = result.data.photo_url || result.data.photo_membre || null
+          
+          // Filtrer toutes les URLs Cloudinary (utiliser la fonction helper)
+          photoUrl = filterCloudinaryUrl(photoUrl)
+          
+          // Si pas de photo ou photo invalide, utiliser l'image par défaut
+          if (!photoUrl || (typeof photoUrl === 'string' && (photoUrl.trim() === '' || photoUrl === 'null'))) {
+            photoUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
+          }
+
           currentUser.value = {
 
             matricule: result.data.matricule,
 
             full_name: result.data.full_name,
 
-            photo_url: result.data.photo_url || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png',
+            photo_url: photoUrl,
 
             role: result.data.role || 'Membre AEEMCI',
 
@@ -1569,9 +1706,9 @@ const loadUserProfile = async () => {
 
           if (API_FALLBACK_TO_MOCK) {
 
-            // Fallback vers les données de test
+            // Fallback vers les données de test - utiliser le matricule de l'utilisateur connecté
 
-            const userData = getUserByMatricule('BEL-SOU-18-001')
+            const userData = getUserByMatricule(matricule)
 
             if (userData) {
 
@@ -1601,29 +1738,61 @@ const loadUserProfile = async () => {
 
             } else {
 
+            // Utiliser le matricule de l'utilisateur connecté, pas un matricule fixe
+
             currentUser.value = {
 
-              matricule: 'BEL-SOU-18-001',
+              matricule: matricule || 'UNKNOWN',
 
-              full_name: 'Marie Dubois',
+              full_name: 'Utilisateur AEEMCI',
 
               photo_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png',
 
-              role: 'Étudiante en Sciences Islamiques',
+              role: 'Membre AEEMCI',
 
-              email: 'marie.dubois@aeemci.org',
+              email: '',
 
-              ville: 'Paris',
+              ville: '',
 
-              bio: 'Passionnée par les sciences islamiques et l\'éducation. Membre active de l\'AEEMCI.',
+              bio: '',
 
-              posts_count: 5,
+              posts_count: 0,
 
-              likes_received: 23,
+              likes_received: 0,
 
-              comments_received: 12
+              comments_received: 0
 
             }
+
+            }
+
+            userProfileLoaded.value = true
+
+          } else {
+
+            // Si pas de fallback, utiliser quand même le matricule de l'utilisateur connecté avec des valeurs par défaut
+
+            currentUser.value = {
+
+              matricule: matricule || 'UNKNOWN',
+
+              full_name: 'Utilisateur AEEMCI',
+
+              photo_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png',
+
+              role: 'Membre AEEMCI',
+
+              email: '',
+
+              ville: '',
+
+              bio: '',
+
+              posts_count: 0,
+
+              likes_received: 0,
+
+              comments_received: 0
 
             }
 
@@ -1639,9 +1808,9 @@ const loadUserProfile = async () => {
 
         if (API_FALLBACK_TO_MOCK) {
 
-          // Fallback vers les données de test
+          // Fallback vers les données de test - utiliser le matricule de l'utilisateur connecté
 
-          const userData = getUserByMatricule('BEL-SOU-18-001')
+          const userData = getUserByMatricule(matricule)
 
           if (userData) {
 
@@ -1671,29 +1840,61 @@ const loadUserProfile = async () => {
 
           } else {
 
+          // Utiliser le matricule de l'utilisateur connecté, pas un matricule fixe
+
           currentUser.value = {
 
-            matricule: 'BEL-SOU-18-001',
+            matricule: matricule || 'UNKNOWN',
 
-            full_name: 'Marie Dubois',
+            full_name: 'Utilisateur AEEMCI',
 
             photo_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png',
 
-            role: 'Étudiante en Sciences Islamiques',
+            role: 'Membre AEEMCI',
 
-            email: 'marie.dubois@aeemci.org',
+            email: '',
 
-            ville: 'Paris',
+            ville: '',
 
-            bio: 'Passionnée par les sciences islamiques et l\'éducation. Membre active de l\'AEEMCI.',
+            bio: '',
 
-            posts_count: 5,
+            posts_count: 0,
 
-            likes_received: 23,
+            likes_received: 0,
 
-            comments_received: 12
+            comments_received: 0
 
           }
+
+          }
+
+          userProfileLoaded.value = true
+
+        } else {
+
+          // Si pas de fallback, utiliser quand même le matricule de l'utilisateur connecté avec des valeurs par défaut
+
+          currentUser.value = {
+
+            matricule: matricule || 'UNKNOWN',
+
+            full_name: 'Utilisateur AEEMCI',
+
+            photo_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png',
+
+            role: 'Membre AEEMCI',
+
+            email: '',
+
+            ville: '',
+
+            bio: '',
+
+            posts_count: 0,
+
+            likes_received: 0,
+
+            comments_received: 0
 
           }
 
@@ -1830,7 +2031,12 @@ const loadUserFeed = async () => {
             const authorName = p.author_name ?? p.full_name ?? p.author ?? ''
 
             const authorVille = p.author_ville ?? p.ville ?? ''
-            const authorPhoto = p.author_photo ?? p.photo_url ?? p.photo_membre ?? 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
+            
+            // Utiliser photo_membre depuis la base de données en priorité
+            let authorPhoto = p.author_photo ?? p.photo_membre ?? p.photo_url ?? null
+            
+            // Filtrer les URLs Cloudinary problématiques AVANT le chargement
+            authorPhoto = filterCloudinaryUrl(authorPhoto)
 
             const createdAt = p.created_at ?? p.createdAt ?? p.date_creation ?? null
 
@@ -2215,8 +2421,11 @@ const closePublishModal = () => {
   showPublishModal.value = false
 
   publishContent.value = ''
-
+  currentPostLocation.value = ''
   selectedMedia.value = []  // Nettoyer les médias
+  locationType.value = 'ci'
+  selectedCity.value = ''
+  locationInput.value = ''
 
   focusedCaptionIndex.value = -1  // Réinitialiser le focus
 
@@ -2272,20 +2481,39 @@ const handleFileSelect = async (event) => {
       continue
     }
     
-    // Créer une URL de prévisualisation
+    // Créer une URL de prévisualisation avec un timestamp pour éviter le cache
     const url = URL.createObjectURL(file)
+    // Ajouter un identifiant unique basé sur le fichier et la date
+    const fileId = `${file.name}_${file.size}_${file.lastModified}_${Date.now()}`
     
     selectedMedia.value.push({
       type: isImage ? 'image' : 'video',
       url: url,
       file: file, // Conserver le fichier pour l'upload
-      caption: ''
+      fileId: fileId, // Identifiant unique pour éviter les conflits
+      caption: '',
+      uploaded: false, // Flag pour savoir si le fichier a été uploadé
+      uploadUrl: null // URL retournée après upload
+    })
+    
+    console.log('📁 Fichier sélectionné:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: new Date(file.lastModified).toISOString(),
+      fileId: fileId
     })
   }
   
-  // Réinitialiser l'input
+  // Réinitialiser l'input pour permettre la sélection du même fichier
   if (event.target) {
     event.target.value = ''
+    // Forcer la réinitialisation complète de l'input
+    setTimeout(() => {
+      if (event.target) {
+        event.target.value = ''
+      }
+    }, 100)
   }
 }
 
@@ -2377,14 +2605,30 @@ const publishFromModal = async () => {
               // Pour les images, on garde la compression
               if (media.file) {
                 // Si c'est un fichier original, l'uploader
-                console.log('🔄 Upload de l\'image...')
+                console.log('🔄 Upload de l\'image...', {
+                  name: media.file.name,
+                  size: media.file.size,
+                  type: media.file.type,
+                  fileId: media.fileId
+                })
                 showUploadProgress.value = true
                 uploadProgress.value = 0
                 uploadFileName.value = media.file.name
                 
                 const imageUrl = await uploadLargeFile(media.file, matricule)
+                // Mettre à jour l'URL dans selectedMedia pour éviter les conflits
+                const mediaIndex = selectedMedia.value.findIndex(m => m.fileId === media.fileId)
+                if (mediaIndex !== -1) {
+                  selectedMedia.value[mediaIndex].uploadUrl = imageUrl
+                  selectedMedia.value[mediaIndex].uploaded = true
+                }
+                
                 images.push(imageUrl)
-                console.log('✅ Image uploadée:', imageUrl)
+                console.log('✅ Image uploadée:', {
+                  url: imageUrl,
+                  originalSize: media.file.size,
+                  uploaded: true
+                })
                 
                 showUploadProgress.value = false
               } else {
@@ -2410,11 +2654,26 @@ const publishFromModal = async () => {
                 // Upload de la vidéo originale (peut faire jusqu'à 1GB)
                 console.log('🔄 Upload de la vidéo...', {
                   name: media.file.name,
-                  size: Math.round(media.file.size / 1024 / 1024) + 'MB'
+                  size: media.file.size,
+                  sizeMB: Math.round(media.file.size / 1024 / 1024) + 'MB',
+                  type: media.file.type,
+                  fileId: media.fileId
                 })
                 const videoUrl = await processVideo(media.file, matricule)
+                
+                // Mettre à jour l'URL dans selectedMedia
+                const mediaIndex = selectedMedia.value.findIndex(m => m.fileId === media.fileId)
+                if (mediaIndex !== -1) {
+                  selectedMedia.value[mediaIndex].uploadUrl = videoUrl
+                  selectedMedia.value[mediaIndex].uploaded = true
+                }
+                
                 videos.push(videoUrl)
-                console.log('✅ Vidéo uploadée:', videoUrl)
+                console.log('✅ Vidéo uploadée:', {
+                  url: videoUrl,
+                  originalSize: media.file.size,
+                  uploaded: true
+                })
               } else {
                 // Fallback pour les vidéos déjà en base64 (petites)
                 videos.push(media.url)
@@ -2534,7 +2793,7 @@ const publishFromModal = async () => {
               url: media.type === 'image' ? images[index] || media.url : media.url,
               caption: media.caption
             })),
-            location: '',
+            location: currentPostLocation.value || '',
             privacy_level: 'public'
           }
 
@@ -2568,7 +2827,7 @@ const publishFromModal = async () => {
           caption: media.caption
         })), // Ajouter tous les médias avec leurs métadonnées (images compressées)
 
-        location: '', // TODO: Ajouter la gestion de la localisation
+        location: currentPostLocation.value || '',
 
         privacy_level: 'public'
 
@@ -2892,7 +3151,40 @@ const loadComments = async (post) => {
 
     if (result.success) {
 
-      post.comments = result.data?.comments || result.comments || []
+      // Récupérer les commentaires
+      const comments = result.data?.comments || result.comments || []
+      
+      // Filtrer les URLs Cloudinary dans les avatars des commentaires
+      const filterCloudinaryUrls = (obj) => {
+        if (!obj) return obj
+        
+        // Filtrer l'avatar de l'auteur
+        if (obj.author && obj.author.avatar && typeof obj.author.avatar === 'string' && obj.author.avatar.includes('cloudinary.com')) {
+          obj.author.avatar = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
+        }
+        
+        // Filtrer les avatars dans les réponses
+        if (obj.replies && Array.isArray(obj.replies)) {
+          obj.replies.forEach(reply => {
+            if (reply.author && reply.author.avatar && typeof reply.author.avatar === 'string' && reply.author.avatar.includes('cloudinary.com')) {
+              reply.author.avatar = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
+            }
+            // Filtrer les sous-réponses
+            if (reply.replies && Array.isArray(reply.replies)) {
+              reply.replies.forEach(subReply => {
+                if (subReply.author && subReply.author.avatar && typeof subReply.author.avatar === 'string' && subReply.author.avatar.includes('cloudinary.com')) {
+                  subReply.author.avatar = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
+                }
+              })
+            }
+          })
+        }
+        
+        return obj
+      }
+      
+      // Appliquer le filtre à tous les commentaires
+      post.comments = comments.map(filterCloudinaryUrls)
 
       console.log(`✅ ${result.data?.count || result.count || 0} commentaires avec réponses chargés pour le post ${post.id}`)
 
@@ -2966,11 +3258,20 @@ const addComment = async (post) => {
         if (!post.comments) post.comments = []
 
         // Enrichir le commentaire avec les informations utilisateur actuelles
+        // Filtrer les URLs Cloudinary dans l'avatar
+        let avatarUrl = currentUser.value.photo_url || result.data.comment?.author?.avatar || null
+        if (avatarUrl && typeof avatarUrl === 'string' && avatarUrl.includes('cloudinary.com')) {
+          avatarUrl = null
+        }
+        if (!avatarUrl || (typeof avatarUrl === 'string' && avatarUrl.trim() === '')) {
+          avatarUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
+        }
+        
         const enhancedComment = {
           ...result.data.comment,
           author: {
-            name: currentUser.value.full_name || 'Utilisateur AEEMCI',
-            avatar: currentUser.value.photo_url || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
+            name: currentUser.value.full_name || result.data.comment?.author?.name || 'Utilisateur AEEMCI',
+            avatar: avatarUrl
           }
         }
 
@@ -3138,14 +3439,40 @@ const addEmoji = () => {
 
 
 const insertEmoji = (emoji) => {
-
   console.log('🔍 Tentative d\'insertion emoji:', emoji)
-
-  console.log('📊 État focusedCaptionIndex:', focusedCaptionIndex.value)
-
   console.log('📊 Nombre de médias:', selectedMedia.value.length)
 
-  
+  // Si des médias sont sélectionnés, insérer dans l'éditeur de légende
+  if (selectedMedia.length > 0 && mediaCaptionEditorRef.value && mediaCaptionEditorRef.value.editor) {
+    const editorElement = mediaCaptionEditorRef.value.editor
+    editorElement.focus()
+    const selection = window.getSelection()
+    const range = document.createRange()
+    range.selectNodeContents(editorElement)
+    range.collapse(false) // Placer à la fin
+    selection.removeAllRanges()
+    selection.addRange(range)
+    document.execCommand('insertText', false, emoji)
+    publishContent.value = editorElement.innerHTML
+    console.log('✅ Emoji inséré dans la légende des médias')
+    return
+  }
+
+  // Sinon, insérer dans l'éditeur principal
+  if (wysiwygEditorRef.value && wysiwygEditorRef.value.editor) {
+    const editorElement = wysiwygEditorRef.value.editor
+    editorElement.focus()
+    const selection = window.getSelection()
+    const range = document.createRange()
+    range.selectNodeContents(editorElement)
+    range.collapse(false) // Placer à la fin
+    selection.removeAllRanges()
+    selection.addRange(range)
+    document.execCommand('insertText', false, emoji)
+    publishContent.value = editorElement.innerHTML
+    console.log('✅ Emoji inséré dans l\'éditeur principal')
+    return
+  }
 
   // STRICT: Si une légende est explicitement active, FORCER l'insertion dans la légende
 
@@ -3288,6 +3615,72 @@ window.insertEmojiInEditor = (emoji) => {
 
 
 const locationInput = ref('')
+const locationType = ref('ci') // 'ci' pour Côte d'Ivoire, 'other' pour autre pays
+const selectedCity = ref('')
+const currentPostLocation = ref('') // Localisation actuelle du post en cours de création
+
+// Liste des villes de Côte d'Ivoire
+const coteIvoireCities = [
+  { label: 'Abidjan', value: 'Abidjan, Côte d\'Ivoire' },
+  { label: 'Yamoussoukro', value: 'Yamoussoukro, Côte d\'Ivoire' },
+  { label: 'Bouaké', value: 'Bouaké, Côte d\'Ivoire' },
+  { label: 'San-Pédro', value: 'San-Pédro, Côte d\'Ivoire' },
+  { label: 'Korhogo', value: 'Korhogo, Côte d\'Ivoire' },
+  { label: 'Daloa', value: 'Daloa, Côte d\'Ivoire' },
+  { label: 'Man', value: 'Man, Côte d\'Ivoire' },
+  { label: 'Gagnoa', value: 'Gagnoa, Côte d\'Ivoire' },
+  { label: 'Abengourou', value: 'Abengourou, Côte d\'Ivoire' },
+  { label: 'Divo', value: 'Divo, Côte d\'Ivoire' },
+  { label: 'Anyama', value: 'Anyama, Côte d\'Ivoire' },
+  { label: 'Adjamé', value: 'Adjamé, Côte d\'Ivoire' },
+  { label: 'Cocody', value: 'Cocody, Côte d\'Ivoire' },
+  { label: 'Marcory', value: 'Marcory, Côte d\'Ivoire' },
+  { label: 'Treichville', value: 'Treichville, Côte d\'Ivoire' },
+  { label: 'Bingerville', value: 'Bingerville, Côte d\'Ivoire' },
+  { label: 'Agboville', value: 'Agboville, Côte d\'Ivoire' },
+  { label: 'Dimbokro', value: 'Dimbokro, Côte d\'Ivoire' },
+  { label: 'Katiola', value: 'Katiola, Côte d\'Ivoire' },
+  { label: 'Boundiali', value: 'Boundiali, Côte d\'Ivoire' },
+  { label: 'Odienné', value: 'Odienné, Côte d\'Ivoire' },
+  { label: 'Séguéla', value: 'Séguéla, Côte d\'Ivoire' },
+  { label: 'Ferkessédougou', value: 'Ferkessédougou, Côte d\'Ivoire' },
+  { label: 'Bouna', value: 'Bouna, Côte d\'Ivoire' },
+  { label: 'Bondoukou', value: 'Bondoukou, Côte d\'Ivoire' },
+  { label: 'Agnibilékro', value: 'Agnibilékro, Côte d\'Ivoire' },
+  { label: 'Grand-Bassam', value: 'Grand-Bassam, Côte d\'Ivoire' },
+  { label: 'Jacqueville', value: 'Jacqueville, Côte d\'Ivoire' },
+  { label: 'Assinie', value: 'Assinie, Côte d\'Ivoire' },
+  { label: 'Tiassalé', value: 'Tiassalé, Côte d\'Ivoire' },
+  { label: 'Soubré', value: 'Soubré, Côte d\'Ivoire' },
+  { label: 'Tabou', value: 'Tabou, Côte d\'Ivoire' },
+  { label: 'Guiglo', value: 'Guiglo, Côte d\'Ivoire' },
+  { label: 'Duékoué', value: 'Duékoué, Côte d\'Ivoire' },
+  { label: 'Bangolo', value: 'Bangolo, Côte d\'Ivoire' },
+  { label: 'Danané', value: 'Danané, Côte d\'Ivoire' },
+  { label: 'Touba', value: 'Touba, Côte d\'Ivoire' },
+  { label: 'Vavoua', value: 'Vavoua, Côte d\'Ivoire' },
+  { label: 'Issia', value: 'Issia, Côte d\'Ivoire' },
+  { label: 'Oumé', value: 'Oumé, Côte d\'Ivoire' },
+  { label: 'Sinfra', value: 'Sinfra, Côte d\'Ivoire' },
+  { label: 'Zuénoula', value: 'Zuénoula, Côte d\'Ivoire' },
+  { label: 'Bouaflé', value: 'Bouaflé, Côte d\'Ivoire' },
+  { label: 'Sassandra', value: 'Sassandra, Côte d\'Ivoire' },
+  { label: 'Fresco', value: 'Fresco, Côte d\'Ivoire' },
+  { label: 'Abidjan - Cocody', value: 'Cocody, Abidjan, Côte d\'Ivoire' },
+  { label: 'Abidjan - Yopougon', value: 'Yopougon, Abidjan, Côte d\'Ivoire' },
+  { label: 'Abidjan - Abobo', value: 'Abobo, Abidjan, Côte d\'Ivoire' },
+  { label: 'Abidjan - Port-Bouët', value: 'Port-Bouët, Abidjan, Côte d\'Ivoire' },
+  { label: 'Abidjan - Plateau', value: 'Plateau, Abidjan, Côte d\'Ivoire' }
+]
+
+// Computed pour vérifier si la localisation est valide
+const isLocationValid = computed(() => {
+  if (locationType.value === 'ci') {
+    return selectedCity.value.trim() !== ''
+  } else {
+    return locationInput.value.trim() !== ''
+  }
+})
 
 const showShareMenu = ref({})
 
@@ -4106,67 +4499,54 @@ const addLocation = () => {
 
 
 const insertLocation = () => {
-
-  if (locationInput.value.trim() && wysiwygEditorRef.value && wysiwygEditorRef.value.editor) {
-
-    const editorElement = wysiwygEditorRef.value.editor
-
-    editorElement.focus()
-
-    
-
-    const locationText = `📍 ${locationInput.value} `
-
-    
-
-    const selection = window.getSelection()
-
-    if (selection.rangeCount > 0) {
-
-      const range = selection.getRangeAt(0)
-
-      range.deleteContents()
-
-      const textNode = document.createTextNode(locationText)
-
-      range.insertNode(textNode)
-
-      range.collapse(false)
-
-      selection.removeAllRanges()
-
-      selection.addRange(range)
-
-    } else {
-
-      const textNode = document.createTextNode(locationText)
-
-      editorElement.appendChild(textNode)
-
-      const range = document.createRange()
-
-      range.selectNodeContents(textNode)
-
-      range.collapse(false)
-
-      selection.removeAllRanges()
-
-      selection.addRange(range)
-
-    }
-
-    
-
-    publishContent.value = editorElement.innerHTML
-
-    updateModalContent()
-
+  // Déterminer la localisation finale
+  let finalLocation = ''
+  if (locationType.value === 'ci') {
+    if (!selectedCity.value.trim()) return
+    finalLocation = selectedCity.value
+  } else {
+    if (!locationInput.value.trim()) return
+    finalLocation = locationInput.value
   }
 
+  // Insérer dans l'éditeur WYSIWYG
+  if (finalLocation && wysiwygEditorRef.value && wysiwygEditorRef.value.editor) {
+    const editorElement = wysiwygEditorRef.value.editor
+    editorElement.focus()
+    
+    const locationText = `📍 ${finalLocation} `
+    
+    const selection = window.getSelection()
+    if (selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0)
+      range.deleteContents()
+      const textNode = document.createTextNode(locationText)
+      range.insertNode(textNode)
+      range.collapse(false)
+      selection.removeAllRanges()
+      selection.addRange(range)
+    } else {
+      const textNode = document.createTextNode(locationText)
+      editorElement.appendChild(textNode)
+      const range = document.createRange()
+      range.selectNodeContents(textNode)
+      range.collapse(false)
+      selection.removeAllRanges()
+      selection.addRange(range)
+    }
+    
+    publishContent.value = editorElement.innerHTML
+    updateModalContent()
+  }
+
+  // Sauvegarder la localisation pour l'envoi au serveur
+  currentPostLocation.value = finalLocation
+
+  // Réinitialiser et fermer
   showLocationModal.value = false
-
   locationInput.value = ''
-
+  selectedCity.value = ''
+  locationType.value = 'ci'
 }
 
 
@@ -4431,17 +4811,72 @@ const cancelDelete = () => {
 
 
 const shareOnWhatsApp = (post) => {
-  // Créer le texte à partager avec le contenu du post
-  const postText = `${post.content}\n\n- ${post.author.name}`;
+  // Construire le texte à partager
+  let shareText = post.content || ''
+  
+  // Ajouter les médias (images et vidéos) au texte partagé
+  const mediaUrls = []
+  
+  // Vérifier la structure avec plusieurs médias (post.media)
+  if (post.media && Array.isArray(post.media) && post.media.length > 0) {
+    post.media.forEach((media) => {
+      if (media.url) {
+        mediaUrls.push(media.url)
+      }
+    })
+  }
+  
+  // Vérifier la structure avec image unique (post.image)
+  if (post.image && !mediaUrls.includes(post.image)) {
+    mediaUrls.push(post.image)
+  }
+  
+  // Vérifier la structure avec vidéo unique (post.video)
+  if (post.video && !mediaUrls.includes(post.video)) {
+    mediaUrls.push(post.video)
+  }
+  
+  // Vérifier les anciennes propriétés (image_url, video_url)
+  if (post.image_url && !mediaUrls.includes(post.image_url)) {
+    mediaUrls.push(post.image_url)
+  }
+  
+  if (post.video_url && !mediaUrls.includes(post.video_url)) {
+    mediaUrls.push(post.video_url)
+  }
+  
+  // Si des médias sont présents, les ajouter au texte
+  if (mediaUrls.length > 0) {
+    if (shareText) {
+      shareText += '\n\n📎 Médias:'
+    } else {
+      shareText = '📎 Médias:'
+    }
+    
+    mediaUrls.forEach((url, index) => {
+      shareText += `\n${index + 1}. ${url}`
+    })
+  }
+  
+  // Ajouter le nom de l'auteur
+  if (post.author && post.author.name) {
+    shareText += `\n\n- ${post.author.name}`
+  }
   
   // Encoder le texte pour l'URL WhatsApp
-  const encodedText = encodeURIComponent(postText);
+  const encodedText = encodeURIComponent(shareText)
   
   // Créer l'URL WhatsApp
-  const whatsappUrl = `https://wa.me/?text=${encodedText}`;
+  const whatsappUrl = `https://wa.me/?text=${encodedText}`
   
   // Ouvrir WhatsApp dans un nouvel onglet
-  window.open(whatsappUrl, '_blank');
+  window.open(whatsappUrl, '_blank')
+  
+  console.log('📤 Partage WhatsApp:', {
+    hasMedia: mediaUrls.length > 0,
+    mediaCount: mediaUrls.length,
+    text: shareText.substring(0, 100) + '...'
+  })
 }
 
 
@@ -4576,7 +5011,107 @@ const logout = () => {
 
 
 
+// Intercepteur global pour remplacer les URLs Cloudinary avant le chargement
+const setupCloudinaryInterceptor = () => {
+  const defaultImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
+  
+  // Intercepter toutes les images existantes et à venir
+  const replaceCloudinaryUrls = () => {
+    const images = document.querySelectorAll('img')
+    images.forEach(img => {
+      // Vérifier si l'URL contient cloudinary.com (même encodée)
+      const src = img.src || img.getAttribute('src') || ''
+      if (src && (src.includes('cloudinary.com') || src.includes('res.cloudinary'))) {
+        img.src = defaultImage
+        img.setAttribute('src', defaultImage)
+        // Empêcher le rechargement de l'URL Cloudinary
+        img.onerror = null
+        img.onload = null
+      }
+    })
+  }
+  
+  // Intercepter les tentatives de modification de src (méthode plus robuste)
+  try {
+    const ImageProto = Image.prototype
+    const originalSrcSetter = Object.getOwnPropertyDescriptor(ImageProto, 'src')?.set
+    
+    if (originalSrcSetter) {
+      Object.defineProperty(ImageProto, 'src', {
+        set: function(value) {
+          if (value && typeof value === 'string' && (value.includes('cloudinary.com') || value.includes('res.cloudinary'))) {
+            console.log('🚫 URL Cloudinary interceptée et remplacée:', value)
+            value = defaultImage
+          }
+          originalSrcSetter.call(this, value)
+        },
+        get: Object.getOwnPropertyDescriptor(ImageProto, 'src')?.get,
+        configurable: true,
+        enumerable: true
+      })
+    }
+  } catch (e) {
+    console.warn('Impossible d\'intercepter Image.prototype.src:', e)
+  }
+  
+  // Observer pour détecter les nouvelles images ajoutées au DOM
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === 1) { // Element node
+          // Vérifier si c'est une image
+          if (node.tagName === 'IMG') {
+            const src = node.src || node.getAttribute('src') || ''
+            if (src && (src.includes('cloudinary.com') || src.includes('res.cloudinary'))) {
+              node.src = defaultImage
+              node.setAttribute('src', defaultImage)
+            }
+          }
+          // Vérifier les images dans les enfants
+          const images = node.querySelectorAll && node.querySelectorAll('img')
+          if (images) {
+            images.forEach(img => {
+              const src = img.src || img.getAttribute('src') || ''
+              if (src && (src.includes('cloudinary.com') || src.includes('res.cloudinary'))) {
+                img.src = defaultImage
+                img.setAttribute('src', defaultImage)
+              }
+            })
+          }
+        }
+      })
+      
+      // Observer aussi les changements d'attributs src
+      mutation.attributeName === 'src' && mutation.target.tagName === 'IMG' && (() => {
+        const img = mutation.target
+        const src = img.src || img.getAttribute('src') || ''
+        if (src && (src.includes('cloudinary.com') || src.includes('res.cloudinary'))) {
+          img.src = defaultImage
+          img.setAttribute('src', defaultImage)
+        }
+      })()
+    })
+  })
+  
+  // Observer les changements dans le DOM (attributs aussi)
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['src']
+  })
+  
+  // Remplacer les URLs existantes
+  replaceCloudinaryUrls()
+  
+  // Répéter périodiquement pour les images chargées dynamiquement
+  setInterval(replaceCloudinaryUrls, 500) // Plus fréquent
+}
+
 onMounted(async () => {
+  // Configurer l'intercepteur global pour les URLs Cloudinary
+  setupCloudinaryInterceptor()
+  
   // Écouter les événements de recherche depuis le header
   window.addEventListener('search-posts', (event) => {
     searchQuery.value = event.detail
@@ -5763,6 +6298,12 @@ div[contenteditable]:focus {
   background: #f0f2f5;
 }
 
+.whatsapp-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
 .post-action-btn.liked {
   color: #1877f2;
   background: transparent;
@@ -6023,6 +6564,7 @@ div[contenteditable]:focus {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 /* Modale de suppression */
@@ -6263,6 +6805,127 @@ div[contenteditable]:focus {
   padding: 20px;
 }
 
+/* Sélecteur de type de localisation */
+.location-type-selector {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e4e6ea;
+}
+
+.location-type-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e4e6ea;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: #65676b;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.location-type-btn:hover {
+  border-color: #1877f2;
+  background: #f0f2f5;
+}
+
+.location-type-btn.active {
+  border-color: #1877f2;
+  background: #e7f3ff;
+  color: #1877f2;
+}
+
+/* Container pour le select */
+.location-select-container {
+  margin-top: 16px;
+}
+
+.location-input-container {
+  margin-top: 16px;
+}
+
+.location-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #050505;
+  margin-bottom: 8px;
+}
+
+.location-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ccd0d5;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #050505;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.location-select:focus {
+  outline: none;
+  border-color: #1877f2;
+  box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.1);
+}
+
+.location-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ccd0d5;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #050505;
+  transition: border-color 0.2s;
+}
+
+.location-input:focus {
+  outline: none;
+  border-color: #1877f2;
+  box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.1);
+}
+
+.location-suggestions {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e4e6ea;
+}
+
+.suggestions-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #65676b;
+  margin-bottom: 12px;
+}
+
+.suggestions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.location-suggestion {
+  padding: 8px 12px;
+  border: 1px solid #e4e6ea;
+  border-radius: 6px;
+  background: white;
+  font-size: 13px;
+  color: #050505;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.location-suggestion:hover {
+  background: #f0f2f5;
+  border-color: #ccd0d5;
+}
+
 .location-modal-footer {
   padding: 16px 20px;
   border-top: 1px solid #e4e6ea;
@@ -6389,17 +7052,121 @@ div[contenteditable]:focus {
   background: #f0f2f5;
 }
 
-.modal-editor-wrapper {
-  padding: 16px 20px;
-  min-height: 200px;
+/* Zone principale : Médias OU Éditeur */
+.modal-main-content {
+  flex: 1;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-/* Zone de prévisualisation des médias */
+.modal-editor-wrapper {
+  padding: 16px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Zone principale des médias (remplace l'éditeur) */
+.media-preview-section-main {
+  padding: 16px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: #f8f9fa;
+  min-height: 300px;
+}
+
+.media-preview-grid-main {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.media-preview-item-main {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.media-preview-container-main {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.media-preview-main {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.media-preview-main video {
+  width: 100%;
+  height: 100%;
+}
+
+.remove-media-btn-main {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.remove-media-btn-main:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
+/* Zone de légende pour les médias */
+.media-caption-wrapper {
+  padding: 16px 20px;
+  border-top: 1px solid #e4e6ea;
+  background: white;
+}
+
+.media-caption-section-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.caption-char-count-main {
+  font-size: 12px;
+  color: #65676b;
+  text-align: right;
+  margin-top: 8px;
+}
+
+/* Zone de prévisualisation des médias (ancienne - pour compatibilité) */
 .media-preview-section {
   padding: 16px 20px;
   border-top: 1px solid #e4e6ea;
   border-bottom: 1px solid #e4e6ea;
   background: #f8f9fa;
+  flex: 1;
+  overflow-y: auto;
+  max-height: 400px;
+  min-height: 0; /* Permet le scroll */
 }
 
 .media-preview-header {
@@ -6523,6 +7290,14 @@ div[contenteditable]:focus {
   padding: 12px 20px;
   border-top: 1px solid #e4e6ea;
   border-bottom: 1px solid #e4e6ea;
+  position: relative;
+  z-index: 1000;
+  flex-shrink: 0; /* Ne pas réduire */
+}
+
+.modal-action-btn.active {
+  background: #e7f3ff;
+  color: #1877f2;
 }
 
 .modal-action-btn {
@@ -6573,6 +7348,8 @@ div[contenteditable]:focus {
   bottom: 0;
   background: white;
   border-radius: 0 0 12px 12px;
+  z-index: 1000;
+  order: 2; /* Placer après les émojis */
 }
 
 .character-count {
@@ -6611,13 +7388,17 @@ div[contenteditable]:focus {
   cursor: wait;
 }
 
-/* Sélecteur d'émojis */
+/* Sélecteur d'émojis - Toujours visible même avec des médias et légendes */
 .emoji-picker-container {
   padding: 16px 20px;
   border-top: 1px solid #e4e6ea;
   background: #f8f9fa;
   max-height: 200px;
   overflow-y: auto;
+  position: relative;
+  z-index: 10002 !important;
+  order: 1; /* Placer avant le footer */
+  flex-shrink: 0; /* Ne pas réduire */
 }
 
 .emoji-grid {
@@ -6661,6 +7442,10 @@ div[contenteditable]:focus {
     grid-template-columns: 1fr;
   }
   
+  .media-preview-grid-main {
+    grid-template-columns: 1fr;
+  }
+  
   .publish-modal {
     max-width: 100%;
     margin: 0;
@@ -6674,6 +7459,14 @@ div[contenteditable]:focus {
   
   .modal-footer {
     border-radius: 0;
+  }
+  
+  .modal-main-content {
+    min-height: 250px;
+  }
+  
+  .media-preview-section-main {
+    min-height: 250px;
   }
 }
 

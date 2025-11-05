@@ -53,8 +53,8 @@
         <!-- User Section -->
         <div class="user-profile-desktop">
           <img 
-            :src="user?.photo_membre" 
-            :alt="user?.nom"
+            :src="user?.photo_membre || user?.photo_url || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'" 
+            :alt="user?.nom || user?.full_name || 'Utilisateur'"
             class="user-avatar"
             @error="onImageError"
           />
@@ -75,8 +75,8 @@
             <span class="logo-text-mobile">Espace Aeemciste</span>
           </div>
           <img 
-            :src="user?.photo_membre" 
-            :alt="user?.nom"
+            :src="user?.photo_membre || user?.photo_url || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'" 
+            :alt="user?.nom || user?.full_name || 'Utilisateur'"
             class="user-avatar-mobile"
             @error="onImageError"
           />
@@ -272,14 +272,87 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useUserStore } from '../../stores/user'
 import { useRouter } from 'vue-router'
+import { getCurrentUserMatricule } from '../../utils/database.js'
 
 const userStore = useUserStore()
 const router = useRouter()
 
-const user = computed(() => userStore.user)
+// État local pour le profil utilisateur avec photo
+const userProfile = ref(null)
+
+// User computed qui combine store et profil chargé
+const user = computed(() => {
+  // Si on a un profil chargé, l'utiliser en priorité
+  if (userProfile.value) {
+    return userProfile.value
+  }
+  // Sinon, utiliser le store
+  return userStore.user
+})
+
+// Charger le profil utilisateur depuis l'API
+const loadUserProfile = async () => {
+  try {
+    const matricule = getCurrentUserMatricule() || userStore.user?.matricule_gen || userStore.user?.matricule
+    
+    if (!matricule) {
+      console.warn('Aucun matricule disponible pour charger le profil')
+      return
+    }
+
+    const response = await fetch(`https://sogetrag.com/apistage/post_api.php?action=get_user_profile&matricule=${matricule}`)
+    const result = await response.json()
+
+    if (result.success && result.data) {
+      // Utiliser photo_url depuis la base de données (photo_membre)
+      // Filtrer TOUTES les URLs Cloudinary car elles retournent 401 (Unauthorized)
+      let photoUrl = result.data.photo_url || result.data.photo_membre || null
+      
+      // Filtrer toutes les URLs Cloudinary (même pattern que dans Posts.vue)
+      const defaultImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
+      
+      if (!photoUrl || typeof photoUrl !== 'string') {
+        photoUrl = defaultImage
+      } else {
+        const trimmedUrl = photoUrl.trim()
+        
+        // Si vide ou null
+        if (trimmedUrl === '' || trimmedUrl === 'null' || trimmedUrl === 'NULL') {
+          photoUrl = defaultImage
+        }
+        // Construire l'URL complète pour les chemins relatifs
+        else if (trimmedUrl.startsWith('/uploads/') || trimmedUrl.startsWith('uploads/')) {
+          const baseUrl = 'http://sogetrag.com/apistage/'
+          photoUrl = baseUrl + (trimmedUrl.startsWith('/') ? trimmedUrl.substring(1) : trimmedUrl)
+        }
+        // FILTRER TOUTES LES URLs CLOUDINARY
+        else if (trimmedUrl.includes('cloudinary.com') || trimmedUrl.includes('res.cloudinary')) {
+          console.warn('🚫 URL Cloudinary filtrée dans HeaderAndHero:', trimmedUrl)
+          photoUrl = defaultImage
+        }
+      }
+
+      userProfile.value = {
+        ...userStore.user, // Garder les données du store
+        ...result.data,    // Surcharger avec les données de l'API
+        photo_membre: photoUrl,
+        photo_url: photoUrl,
+        nom: result.data.full_name?.split(' ')[1] || result.data.nom || '',
+        prenom: result.data.full_name?.split(' ')[0] || result.data.prenom || ''
+      }
+    }
+  } catch (error) {
+    console.error('Erreur lors du chargement du profil:', error)
+  }
+}
+
+onMounted(() => {
+  // Charger le profil utilisateur au montage du composant
+  loadUserProfile()
+})
 const searchQuery = ref('')
 const showMenu = ref(false)
 
@@ -324,7 +397,12 @@ const notifications = ref([
 ])
 
 const onImageError = (event) => {
-  event.target.src = 'https://upload.wikimedia.org/wikipedia/fr/4/42/Logo_AEEMCI.jpeg'
+  // Si l'image ne peut pas être chargée, utiliser l'image par défaut
+  const defaultImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
+  if (event.target && event.target.src !== defaultImage) {
+    event.target.src = defaultImage
+    event.target.onerror = null // Empêcher les boucles infinies
+  }
 }
 
 const handleLogout = async () => {

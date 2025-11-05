@@ -187,6 +187,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '../../stores/user'
+import { setCurrentUser } from '../../utils/database.js'
 
 
 const userStore = useUserStore()
@@ -258,6 +259,14 @@ const handleLogin = async () => {
     if (data.success) {
       // Stocke toute la réponse dans le store
       userStore.login(data.user)
+      
+      // Stocker le matricule dans sessionStorage pour que Posts.vue puisse le récupérer
+      const userMatricule = data.user.matricule_gen || data.user.matricule || data.user.id_membre || matricule.value
+      if (userMatricule) {
+        setCurrentUser(userMatricule, data.user, false)
+        console.log('Matricule stocké:', userMatricule)
+      }
+      
       console.log('Utilisateur connecté:', data.user)
     } else {
         error.value = data.error || 'Échec de la connexion'

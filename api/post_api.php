@@ -97,6 +97,57 @@ function formatTimestamp($timestamp) {
     return $date->format('d/m/Y');
 }
 
+/**
+ * Valider et nettoyer une URL de photo
+ * Si c'est une URL Cloudinary invalide ou suspecte, retourner l'image par défaut
+ */
+function validatePhotoUrl($photoUrl) {
+    $defaultImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png';
+    
+    // Si vide, null ou invalide, retourner l'image par défaut
+    if (empty($photoUrl) || $photoUrl === 'null' || trim($photoUrl) === '') {
+        return $defaultImage;
+    }
+    
+    // Nettoyer l'URL
+    $photoUrl = trim($photoUrl);
+    
+    // RETOURNER TOUTES LES URLs TELLES QUELLES - Le frontend gérera les erreurs
+    // Ne plus filtrer les URLs Cloudinary car le frontend a @error pour gérer les erreurs 401
+    
+    // Si c'est une URL complète (http:// ou https://), la retourner telle quelle
+    if (strpos($photoUrl, 'http://') === 0 || strpos($photoUrl, 'https://') === 0) {
+        return $photoUrl;
+    }
+    
+    // Si c'est un chemin relatif ou absolu, construire l'URL complète
+    if (strpos($photoUrl, '/') === 0 || strpos($photoUrl, './') === 0 || strpos($photoUrl, 'uploads/') === 0) {
+        // Construire l'URL complète si c'est un chemin relatif
+        if (strpos($photoUrl, '/uploads/') !== false || strpos($photoUrl, 'uploads/') !== false) {
+            // Si c'est un chemin vers uploads, construire l'URL complète
+            $baseUrl = 'http://sogetrag.com/apistage/';
+            if (strpos($photoUrl, '/') === 0) {
+                return $baseUrl . ltrim($photoUrl, '/');
+            }
+            return $baseUrl . $photoUrl;
+        }
+        // Pour les autres chemins, essayer de construire une URL complète
+        if (strpos($photoUrl, '/') === 0) {
+            $baseUrl = 'http://sogetrag.com/apistage/';
+            return $baseUrl . ltrim($photoUrl, '/');
+        }
+        return $photoUrl;
+    }
+    
+    // Si aucun pattern reconnu mais que ce n'est pas vide, retourner tel quel (peut être une URL valide)
+    // Seulement retourner l'image par défaut si vraiment rien ne correspond
+    if (strlen($photoUrl) > 0) {
+        return $photoUrl;
+    }
+    
+    return $defaultImage;
+}
+
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 if(empty($action)){
     $raw = file_get_contents('php://input');
@@ -159,7 +210,10 @@ try {
 
             $fullName = trim(($u['prenom'] ?? '').' '.($u['nom'] ?? ''));
             $role = $u['qualite_membre'] ?? 'Membre AEEMCI';
-            $photo = $u['photo_membre'] ?? 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png';
+            
+            // Récupérer la photo depuis photo_membre et la valider
+            $photo = validatePhotoUrl($u['photo_membre'] ?? null);
+            
             $ville = $u['ville_ou_commune'] ?? '';
 
             sendSuccess([
@@ -212,12 +266,17 @@ try {
                 try { $cc = $pdo->prepare("SELECT COUNT(*) FROM p_comments WHERE post_id=? AND type='comment'"); $cc->execute([$r['id']]); $comments_count = (int)$cc->fetchColumn(); } catch(Throwable $e){}
                 if ($matricule){ try { $urq = $pdo->prepare("SELECT COUNT(*) FROM p_comments WHERE post_id=? AND type='reaction' AND author_matricule=?"); $urq->execute([$r['id'],$matricule]); $ur = (int)$urq->fetchColumn(); } catch(Throwable $e){} }
 
+                // Récupérer la photo de l'auteur depuis photo_membre et la valider
+                $photoMembre = $au['photo_membre'] ?? null;
+                $authorPhoto = validatePhotoUrl($photoMembre);
+                // Ne plus filtrer les URLs Cloudinary - laisser le frontend gérer avec @error
+
                 $posts[] = [
                     'id'=>$r['id'] ?? null,
                     'content'=>$r['content'] ?? ($r['post_content'] ?? ''),
                     'author_name'=>trim(($au['prenom']??'').' '.($au['nom']??'')) ?: ($r['author_matricule'] ?? ''),
                     'author_ville'=>$au['ville_ou_commune'] ?? '',
-                    'author_photo'=>$au['photo_membre'] ?? 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png',
+                    'author_photo'=>$authorPhoto,
                     'created_at'=>$r['created_at'] ?? ($r['date_creation'] ?? null),
                     'reactions_count'=>$reactions_count,
                     'comments_count'=>$comments_count,
@@ -267,22 +326,38 @@ try {
                 mkdir($uploadDir, 0755, true);
             }
             
-            // Générer un nom de fichier unique
+            // Générer un nom de fichier unique avec timestamp et microsecondes pour éviter les collisions
             $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-            $fileName = $matricule . '_' . time() . '_' . uniqid() . '.' . $extension;
+            // Utiliser microtime pour plus de précision et rand pour éviter les collisions
+            $uniqueId = uniqid('', true) . '_' . mt_rand(1000, 9999);
+            $fileName = $matricule . '_' . time() . '_' . $uniqueId . '.' . $extension;
             $filePath = $uploadDir . $fileName;
+            
+            // Vérifier si le fichier existe déjà et le supprimer (cas rare mais possible)
+            if (file_exists($filePath)) {
+                @unlink($filePath);
+            }
             
             // Déplacer le fichier uploadé
             if (move_uploaded_file($file['tmp_name'], $filePath)) {
-                // URL absolue pour accéder au fichier via le serveur distant
-                $fileUrl = 'http://sogetrag.com/apistage/uploads/' . $fileName;
-                
-                sendSuccess([
-                    'url' => $fileUrl,
-                    'filename' => $fileName,
-                    'size' => $file['size'],
-                    'type' => $file['type']
-                ]);
+                // Vérifier que le fichier a bien été écrit et a la bonne taille
+                if (file_exists($filePath) && filesize($filePath) === $file['size']) {
+                    // URL absolue pour accéder au fichier via le serveur distant
+                    // Ajouter un timestamp pour forcer le rechargement (cache-busting)
+                    $fileUrl = 'http://sogetrag.com/apistage/uploads/' . $fileName . '?t=' . time();
+                    
+                    sendSuccess([
+                        'url' => $fileUrl,
+                        'filename' => $fileName,
+                        'size' => $file['size'],
+                        'actual_size' => filesize($filePath), // Vérification
+                        'type' => $file['type']
+                    ]);
+                } else {
+                    // Si le fichier n'a pas la bonne taille, supprimer et renvoyer une erreur
+                    @unlink($filePath);
+                    sendError('Erreur: le fichier uploadé n\'a pas la bonne taille');
+                }
             } else {
                 sendError('Erreur lors de l\'upload du fichier');
             }
@@ -538,19 +613,10 @@ try {
                 
                 $comment_id = $pdo->lastInsertId();
                 
-                // Retourner le commentaire créé avec les infos utilisateur
-                $newComment = [
-                    'id' => (int)$comment_id,
-                    'text' => $textContent,
-                    'author' => [
-                        'name' => 'Utilisateur AEEMCI', // Sera amélioré plus tard
-                        'avatar' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
-                    ],
-                    'timestamp' => 'À l\'instant',
-                    'created_at' => date('Y-m-d H:i:s')
-                ];
+                // Récupérer le nom de l'utilisateur AVANT de créer le commentaire retourné
+                $authorName = $matricule ?: 'Utilisateur AEEMCI';
+                $authorAvatar = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png';
                 
-                // Essayer de récupérer le nom de l'utilisateur
                 if (!empty($matricule)) {
                     try {
                         $userStmt = $pdo->prepare("SELECT prenom, nom, photo_membre FROM aeemciste_carte_membre WHERE matricule_gen = ? LIMIT 1");
@@ -559,21 +625,36 @@ try {
                         if ($userInfo) {
                             $prenom = $userInfo['prenom'] ?? '';
                             $nom = $userInfo['nom'] ?? '';
-                            $fullName = trim($prenom . ' ' . $nom) ?: $matricule;
-                            $newComment['author']['name'] = $fullName;
-                            if (!empty($userInfo['photo_membre'])) {
-                                $newComment['author']['avatar'] = $userInfo['photo_membre'];
+                            $fullName = trim($prenom . ' ' . $nom);
+                            // Si pas de nom, utiliser le matricule au lieu de "Utilisateur AEEMCI"
+                            if (empty($fullName)) {
+                                $fullName = $matricule;
                             }
+                            $authorName = $fullName;
+                            // Valider et utiliser photo_membre
+                            $authorAvatar = validatePhotoUrl($userInfo['photo_membre'] ?? null);
                         } else {
-                            // Si pas trouvé dans aeemciste_carte_membre, utiliser le matricule
-                            $newComment['author']['name'] = $matricule;
+                            // Si utilisateur non trouvé, utiliser le matricule
+                            $authorName = $matricule;
                         }
                     } catch (Throwable $e) {
+                        error_log('Erreur récupération utilisateur commentaire: ' . $e->getMessage());
                         // En cas d'erreur, utiliser le matricule
-                        $newComment['author']['name'] = $matricule;
-                        error_log('Erreur récupération utilisateur: ' . $e->getMessage());
+                        $authorName = $matricule ?: 'Utilisateur AEEMCI';
                     }
                 }
+                
+                // Retourner le commentaire créé avec les infos utilisateur
+                $newComment = [
+                    'id' => (int)$comment_id,
+                    'text' => $textContent,
+                    'author' => [
+                        'name' => $authorName,
+                        'avatar' => $authorAvatar
+                    ],
+                    'timestamp' => 'À l\'instant',
+                    'created_at' => date('Y-m-d H:i:s')
+                ];
                 
                 sendSuccess([
                     'comment_id' => $comment_id,
@@ -794,35 +875,55 @@ try {
                 $stmt->execute([$post_id]);
                 $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 
+                // OPTIMISATION: Récupérer tous les utilisateurs en une seule requête
+                $matricules = [];
+                foreach ($comments as $comment) {
+                    if (!empty($comment['author_matricule'])) {
+                        $matricules[] = $comment['author_matricule'];
+                    }
+                }
+                $matricules = array_unique($matricules);
+                
+                // Mapper les infos utilisateurs
+                $usersMap = [];
+                $defaultImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png';
+                
+                if (!empty($matricules)) {
+                    $placeholders = str_repeat('?,', count($matricules) - 1) . '?';
+                    $userSql = "SELECT matricule_gen, prenom, nom, photo_membre FROM aeemciste_carte_membre WHERE matricule_gen IN ($placeholders)";
+                    $userStmt = $pdo->prepare($userSql);
+                    $userStmt->execute($matricules);
+                    $users = $userStmt->fetchAll(PDO::FETCH_ASSOC);
+                    
+                    foreach ($users as $user) {
+                        $mat = $user['matricule_gen'] ?? '';
+                        if ($mat) {
+                            $prenom = $user['prenom'] ?? '';
+                            $nom = $user['nom'] ?? '';
+                            $fullName = trim($prenom . ' ' . $nom);
+                            if (empty($fullName)) {
+                                $fullName = $mat;
+                            }
+                            $usersMap[$mat] = [
+                                'name' => $fullName,
+                                'avatar' => validatePhotoUrl($user['photo_membre'] ?? null)
+                            ];
+                        }
+                    }
+                }
+                
                 // Formater les commentaires
                 $formattedComments = [];
                 foreach ($comments as $comment) {
-                    $authorName = 'Utilisateur AEEMCI';
-                    $authorAvatar = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png';
+                    $authorMatricule = $comment['author_matricule'] ?? '';
+                    $authorName = $authorMatricule ?: 'Utilisateur AEEMCI';
+                    $authorAvatar = $defaultImage;
                     
-                    // Récupérer le nom réel de l'utilisateur depuis aeemciste_carte_membre
-                    if (isset($comment['author_matricule']) && !empty($comment['author_matricule'])) {
-                        try {
-                            $userStmt = $pdo->prepare("SELECT prenom, nom, photo_membre FROM aeemciste_carte_membre WHERE matricule_gen = ? LIMIT 1");
-                            $userStmt->execute([$comment['author_matricule']]);
-                            $userInfo = $userStmt->fetch(PDO::FETCH_ASSOC);
-                            if ($userInfo) {
-                                $prenom = $userInfo['prenom'] ?? '';
-                                $nom = $userInfo['nom'] ?? '';
-                                $fullName = trim($prenom . ' ' . $nom) ?: $comment['author_matricule'];
-                                $authorName = $fullName;
-                                if (!empty($userInfo['photo_membre'])) {
-                                    $authorAvatar = $userInfo['photo_membre'];
-                                }
-                            } else {
-                                // Si pas trouvé, utiliser le matricule
-                                $authorName = $comment['author_matricule'];
-                            }
-                        } catch (Throwable $e) {
-                            // En cas d'erreur, utiliser le matricule
-                            $authorName = $comment['author_matricule'] ?? 'Utilisateur AEEMCI';
-                            error_log('Erreur récupération utilisateur commentaire: ' . $e->getMessage());
-                        }
+                    if (!empty($authorMatricule) && isset($usersMap[$authorMatricule])) {
+                        $authorName = $usersMap[$authorMatricule]['name'];
+                        $authorAvatar = $usersMap[$authorMatricule]['avatar'];
+                    } elseif (!empty($authorMatricule)) {
+                        $authorName = $authorMatricule;
                     }
                     
                     $formattedComments[] = [
@@ -1359,32 +1460,62 @@ try {
                 $stmt->execute([$post_id]);
                 $allComments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 
+                // OPTIMISATION: Récupérer tous les utilisateurs en une seule requête
+                $matricules = [];
+                foreach ($allComments as $comment) {
+                    if (!empty($comment['author_matricule'])) {
+                        $matricules[] = $comment['author_matricule'];
+                    }
+                }
+                $matricules = array_unique($matricules); // Éliminer les doublons
+                
+                // Mapper les infos utilisateurs
+                $usersMap = [];
+                $defaultImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png';
+                
+                if (!empty($matricules)) {
+                    // Construire une requête avec IN pour récupérer tous les utilisateurs en une fois
+                    $placeholders = str_repeat('?,', count($matricules) - 1) . '?';
+                    $userSql = "SELECT matricule_gen, prenom, nom, photo_membre FROM aeemciste_carte_membre WHERE matricule_gen IN ($placeholders)";
+                    $userStmt = $pdo->prepare($userSql);
+                    $userStmt->execute($matricules);
+                    $users = $userStmt->fetchAll(PDO::FETCH_ASSOC);
+                    
+                    // Créer un map matricule => infos utilisateur
+                    foreach ($users as $user) {
+                        $mat = $user['matricule_gen'] ?? '';
+                        if ($mat) {
+                            $prenom = $user['prenom'] ?? '';
+                            $nom = $user['nom'] ?? '';
+                            $fullName = trim($prenom . ' ' . $nom);
+                            // Si pas de nom, utiliser le matricule au lieu de "Utilisateur AEEMCI"
+                            if (empty($fullName)) {
+                                $fullName = $mat;
+                            }
+                            $usersMap[$mat] = [
+                                'name' => $fullName,
+                                'avatar' => validatePhotoUrl($user['photo_membre'] ?? null)
+                            ];
+                        }
+                    }
+                }
+                
                 // Organiser les commentaires en structure hiérarchique
                 $comments = [];
                 $repliesMap = [];
                 
                 foreach ($allComments as $comment) {
-                    // Récupérer les infos utilisateur
-                    $authorName = 'Utilisateur AEEMCI';
-                    $authorAvatar = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png';
+                    // Récupérer les infos utilisateur depuis le map
+                    $authorMatricule = $comment['author_matricule'] ?? '';
+                    $authorName = $authorMatricule ?: 'Utilisateur AEEMCI'; // Utiliser le matricule si pas trouvé
+                    $authorAvatar = $defaultImage;
                     
-                    if (!empty($comment['author_matricule'])) {
-                        try {
-                            $userStmt = $pdo->prepare("SELECT prenom, nom, photo_membre FROM aeemciste_carte_membre WHERE matricule_gen = ? LIMIT 1");
-                            $userStmt->execute([$comment['author_matricule']]);
-                            $userInfo = $userStmt->fetch(PDO::FETCH_ASSOC);
-                            if ($userInfo) {
-                                $prenom = $userInfo['prenom'] ?? '';
-                                $nom = $userInfo['nom'] ?? '';
-                                $fullName = trim($prenom . ' ' . $nom) ?: $comment['author_matricule'];
-                                $authorName = $fullName;
-                                if (!empty($userInfo['photo_membre'])) {
-                                    $authorAvatar = $userInfo['photo_membre'];
-                                }
-                            }
-                        } catch (Throwable $e) {
-                            error_log('Erreur récupération utilisateur: ' . $e->getMessage());
-                        }
+                    if (!empty($authorMatricule) && isset($usersMap[$authorMatricule])) {
+                        $authorName = $usersMap[$authorMatricule]['name'];
+                        $authorAvatar = $usersMap[$authorMatricule]['avatar'];
+                    } elseif (!empty($authorMatricule)) {
+                        // Si pas dans le map mais qu'on a un matricule, utiliser le matricule
+                        $authorName = $authorMatricule;
                     }
                     
                     $formattedComment = [

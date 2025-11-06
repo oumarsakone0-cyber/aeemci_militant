@@ -165,6 +165,21 @@
             </div>
           </router-link>
 
+          <router-link to="/documents" class="group">
+            <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-emerald-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div class="w-16 h-16 mx-auto bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-500/50 transition-all">
+               <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 4a8 8 0 00-8 8v5a1 1 0 001 1h2v-4H6v-2a6 6 0 0112 0v2h-1v4h2a1 1 0 001-1v-5a8 8 0 00-8-8z" />
+                  <path d="M9 19h6v-6H9v6z" />
+                </svg>
+              </div>
+              <div class="text-xs text-center font-semibold text-gray-700 group-hover:text-emerald-600 transition-colors leading-tight">
+                Mes Documents
+              </div>
+            </div>
+          </router-link>
+
+
           <!-- Coin spirituel -->
           <router-link to="/coins" class="group">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-violet-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
@@ -293,6 +308,7 @@
         </div>
       </div>
     </div>
+    
 
     <!-- Mobile Navigation Bar -->
     <div class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-200/50 px-4 py-3 md:hidden shadow-2xl z-50">

@@ -22,6 +22,8 @@ import MesSr from "../components/pages/MesSr.vue"
 import BureauxSr from "../components/pages/BureauxSr.vue"
 import Quiz from "../components/pages/Quiz.vue"
 import Meet from "../components/pages/Meet.vue"
+import PageProfile from "../components/pages/PageProfile.vue"
+import DocPage from "../components/pages/DocPage.vue"
 
 const routes = [
   { path: "/", name: "dashboard", component: Dashboard },
@@ -35,6 +37,7 @@ const routes = [
   { path: "/inscription", name: "inscription", component: Inscription },
   { path: "/mes_sous_comites", name: "mes_sous_comites", component: MesSousComites },
   { path: "/bibliotheque", name: "bibliotheque", component: Bibliotheque },
+  { path: "/documents", name: "documents", component: DocPage },
 
   { path: "/social", name: "social", component: Social },
   { path: "/coins", name: "coins", component: Coins },
@@ -45,6 +48,7 @@ const routes = [
   { path: "/bureaux_sr", name: "bureaux_sr", component: BureauxSr },
   { path: "/BureauxSr", redirect: "/bureaux_sr" }, // Alias pour compatibilité
   { path: "/meet", name: "meet", component: Meet },
+  { path:"/profile",name:"profile",component:PageProfile}
 ]
 
 const router = createRouter({

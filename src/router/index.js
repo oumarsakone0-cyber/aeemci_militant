@@ -20,6 +20,7 @@ import MesLivres from "../components/pages/MesLivres.vue"
 import Avis from "../components/pages/Avis.vue"
 import MesSr from "../components/pages/MesSr.vue"
 import BureauxSr from "../components/pages/BureauxSr.vue"
+import Cima from "../components/pages/Cima.vue"
 import Quiz from "../components/pages/Quiz.vue"
 import Meet from "../components/pages/Meet.vue"
 import PageProfile from "../components/pages/PageProfile.vue"
@@ -47,6 +48,7 @@ const routes = [
   { path: "/mes_sr", name: "mes_sr", component: MesSr },
   { path: "/bureaux_sr", name: "bureaux_sr", component: BureauxSr },
   { path: "/BureauxSr", redirect: "/bureaux_sr" }, // Alias pour compatibilité
+  { path: "/cima", name: "cima", component: Cima },
   { path: "/meet", name: "meet", component: Meet },
   { path:"/profile",name:"profile",component:PageProfile}
 ]

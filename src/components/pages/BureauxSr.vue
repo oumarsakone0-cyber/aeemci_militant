@@ -1,62 +1,76 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-emerald-50 to-amber-50">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-emerald-100">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center">
-              <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+  <div class="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-green-50 relative overflow-hidden" style="padding-bottom: 80px;">
+    <!-- Added decorative background elements -->
+    <div class="absolute top-0 left-0 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+    <div class="absolute top-0 right-0 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+    <div class="absolute bottom-0 left-1/2 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+
+    <!-- Enhanced header with glassmorphism -->
+    <header class="relative backdrop-blur-sm bg-white/80 shadow-lg border-b border-emerald-200/50">
+      <div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6">
+        <div class="flex items-start justify-between gap-1 sm:gap-2 flex-nowrap">
+          <div class="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform flex-shrink-0">
+              <svg class="w-5 h-5 sm:w-7 sm:h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
               </svg>
             </div>
-            <div>
-              <h1 class="text-2xl font-bold text-gray-900">Bureaux SR</h1>
-              <p class="text-sm text-gray-600">Gérez les bureaux des secrétariats régionaux</p>
+            <div class="flex flex-col min-w-0">
+              <h1 class="text-lg sm:text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent whitespace-nowrap">Bureaux SR</h1>
+              <p class="text-xs sm:text-sm text-gray-600 whitespace-nowrap">Gérez les bureaux des secrétariats régionaux</p>
             </div>
           </div>
-          <button
-            @click="openAddModal"
-            class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center space-x-2"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-            </svg>
-            <span>Ajouter un bureau</span>
-          </button>
+          <div class="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+            <button
+              @click="openAddModal"
+              class="px-2 sm:px-4 py-1.5 sm:py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg sm:rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 flex items-center space-x-1 shadow-lg hover:shadow-xl transform hover:scale-105 whitespace-nowrap text-xs sm:text-base"
+            >
+              <svg class="w-3.5 h-3.5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+              </svg>
+              <span class="hidden sm:inline">Ajouter un bureau</span>
+              <span class="sm:hidden">Ajouter</span>
+            </button>
+            <div class="text-right hidden sm:block">
+              <p class="text-sm font-medium text-emerald-600">{{ bureaux.length }} bureau(x)</p>
+            </div>
+          </div>
         </div>
       </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Loading State -->
-      <div v-if="isLoading" class="flex flex-col items-center justify-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
-        <p class="mt-4 text-gray-600">Chargement des bureaux...</p>
+      <div v-if="isLoading" class="flex flex-col items-center justify-center py-16">
+        <div class="relative">
+          <div class="animate-spin rounded-full h-16 w-16 border-4 border-emerald-200"></div>
+          <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-emerald-600 absolute top-0 left-0"></div>
+        </div>
+        <p class="mt-6 text-gray-600 font-medium">Chargement des bureaux...</p>
       </div>
 
-      <!-- Bureaux Grid -->
+      <!-- Enhanced cards grid -->
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
           v-for="bureau in bureaux"
           :key="bureau.id"
-          class="bg-white rounded-xl shadow-sm border border-emerald-100 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all duration-300"
+          class="backdrop-blur-sm bg-white/80 rounded-2xl shadow-lg border border-emerald-200/50 overflow-hidden hover:shadow-2xl hover:border-emerald-300 hover:-translate-y-1 transition-all duration-300 group"
         >
           <div class="p-6">
             <div class="flex items-start justify-between mb-4">
-              <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                  <span class="text-emerald-600 font-bold text-sm">B</span>
+              <div class="flex items-center space-x-3 flex-1 min-w-0">
+                <div class="w-12 h-12 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <span class="text-emerald-600 font-bold text-base">B</span>
                 </div>
-                <div>
-                  <h3 class="font-semibold text-gray-900">{{ bureau.nom_bureau || 'Bureau SR' }}</h3>
-                  <p class="text-sm text-gray-500">Poste: {{ bureau.poste || 'N/A' }}</p>
+                <div class="min-w-0 flex-1">
+                  <h3 class="font-bold text-gray-900 text-left truncate" :title="bureau.nom_bureau">{{ bureau.nom_bureau || 'Bureau SR' }}</h3>
+                  <p class="text-sm text-gray-500 truncate">Poste: <span class="text-blue-600 font-medium">{{ bureau.poste || 'N/A' }}</span></p>
                 </div>
               </div>
-              <div class="flex space-x-2">
+              <div class="flex space-x-1 flex-shrink-0 ml-2">
                 <button
                   @click="editBureau(bureau)"
-                  class="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                  class="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 transform hover:scale-110"
                   title="Modifier"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,8 +78,8 @@
                   </svg>
                 </button>
                 <button
-                  @click="confirmDelete(bureau.id)"
-                  class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  @click="confirmDelete(bureau.id, bureau.nom_bureau)"
+                  class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 transform hover:scale-110"
                   title="Supprimer"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,27 +91,35 @@
             
             <div class="space-y-3">
               <div class="flex items-center space-x-3">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
-                <span class="text-sm text-gray-600">Matricule: {{ bureau.matricule_membre }}</span>
+                <span class="text-sm text-gray-700 font-medium truncate">{{ bureau.nom_president || 'N/A' }}</span>
               </div>
               
-              <div class="flex items-center space-x-3" v-if="bureau.nom_president">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
-                <span class="text-sm text-gray-600">Président: {{ bureau.nom_president }}</span>
-              </div>
               <div class="flex items-center space-x-3" v-if="bureau.telephone">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                 </svg>
-                <span class="text-sm text-gray-600">{{ bureau.telephone }}</span>
+                <span class="text-sm text-gray-600 truncate">{{ bureau.telephone }}</span>
+              </div>
+              
+              <div class="flex items-center space-x-3" v-if="bureau.email">
+                <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                <span class="text-sm text-gray-600 font-mono truncate">{{ bureau.email }}</span>
+              </div>
+              
+              <div class="flex items-center space-x-3">
+                <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.22 0L3 15M3 3l7.89 4.26a2 2 0 002.22 0L21 3M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                <span class="text-sm text-gray-600 font-mono truncate">{{ bureau.matricule_membre }}</span>
               </div>
             </div>
             
-            <div class="mt-4 pt-4 border-t border-gray-100">
+            <div class="mt-4 pt-4 border-t border-emerald-100">
               <p class="text-xs text-gray-500">Créé le {{ formatDate(bureau.created_at) }}</p>
             </div>
           </div>
@@ -105,226 +127,370 @@
       </div>
 
       <!-- Empty State -->
-      <div v-if="!isLoading && bureaux.length === 0" class="text-center py-12">
-        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-        </svg>
-        <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun bureau trouvé</h3>
+      <div v-if="bureaux.length === 0 && !isLoading" class="text-center py-16">
+        <div class="w-20 h-20 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+          </svg>
+        </div>
+        <h3 class="mt-2 text-lg font-semibold text-gray-900">Aucun bureau trouvé</h3>
         <p class="mt-1 text-sm text-gray-500">Commencez par ajouter votre premier bureau.</p>
       </div>
     </main>
 
-    <!-- Add/Edit Modal -->
+    <!-- Enhanced modal with glassmorphism and better animations -->
     <div
       v-if="showAddModal || showEditModal"
-      style="z-index: 1111"
-      class="modal-overlay"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn"
       @click="closeModal"
     >
       <div
-        class="modal-content"
+        class="backdrop-blur-xl bg-white/95 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slideUp"
         @click.stop
-        style="max-width: 600px; max-height: 90vh; overflow-y: auto;"
       >
-        <div class="modal-body">
-          <div class="modal-header">
-            <h2 class="modal-title">
-              {{ showEditModal ? 'Modifier le bureau' : 'Ajouter un bureau' }}
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-6 pb-4 border-b border-emerald-200">
+            <h2 class="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              {{ showEditModal ? 'Modifier le bureau' : (currentStep === 1 ? 'Vérification du membre' : 'Ajouter un bureau') }}
             </h2>
             <button
               @click="closeModal"
-              class="modal-close"
+              class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200 transform hover:scale-110"
             >
-              <svg class="close-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
             </button>
           </div>
 
-          <form @submit.prevent="submitForm" class="form">
-            <!-- Matricule du membre (automatique) -->
-            <div class="form-group">
-              <label class="form-label">Matricule du membre *</label>
+          <!-- Indicateur d'étapes -->
+          <div class="flex items-center justify-center mb-8">
+            <div class="flex items-center">
+              <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300" 
+                     :class="currentStep >= 1 ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg' : 'bg-gray-200 text-gray-500'">
+                  1
+                </div>
+                <span class="ml-2 text-sm font-semibold transition-colors duration-300" 
+                      :class="currentStep >= 1 ? 'text-emerald-600' : 'text-gray-500'">
+                  Vérification
+                </span>
+              </div>
+              <div class="w-16 h-1 mx-4 rounded-full transition-all duration-300" 
+                   :class="currentStep > 1 ? 'bg-gradient-to-r from-emerald-600 to-teal-600' : 'bg-gray-200'"></div>
+              <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300" 
+                     :class="currentStep >= 2 ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg' : 'bg-gray-200 text-gray-500'">
+                  2
+                </div>
+                <span class="ml-2 text-sm font-semibold transition-colors duration-300" 
+                      :class="currentStep >= 2 ? 'text-emerald-600' : 'text-gray-500'">
+                  Formulaire
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Étape 1: Vérification du matricule -->
+          <div v-if="currentStep === 1 && !showEditModal" class="text-center">
+            <div class="w-20 h-20 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-6 transform hover:scale-105 transition-transform">
+              <svg class="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Vérification du membre</h3>
+            <p class="text-gray-600 mb-6">
+              Saisissez le matricule du membre pour récupérer automatiquement ses informations.
+            </p>
+              
+            <div class="mb-6">
+              <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Matricule du membre *</label>
               <input
-                v-model="form.matricule_membre"
+                v-model="matriculeInput"
                 type="text"
                 required
-                class="form-input"
-                :disabled="true"
-                placeholder="Matricule du membre connecté"
+                class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                placeholder="Ex: BEL-SOU-18-001"
+                :disabled="isVerifying"
               />
-              <p class="text-xs text-gray-500 mt-1">Ce champ est automatiquement rempli avec votre matricule</p>
+              <div v-if="verificationError" class="mt-2 text-sm text-red-600 font-medium">
+                {{ verificationError }}
+              </div>
             </div>
-
-            <!-- Nom du bureau -->
-            <div class="form-group">
-              <label class="form-label">Nom du bureau *</label>
-              <input
-                v-model="form.nom_bureau"
-                type="text"
-                required
-                class="form-input"
-                placeholder="Ex: Bureau de Coordination"
-              />
-            </div>
-
-            <!-- Poste -->
-            <div class="form-group">
-              <label class="form-label">Poste *</label>
-              <select
-                v-model="form.poste"
-                required
-                class="form-input"
-              >
-                <option value="">Sélectionner un poste</option>
-                <option value="Secrétaire Régional">Secrétaire Régional</option>
-                <option value="Vice-Secrétaire Régional">Vice-Secrétaire Régional</option>
-                <option value="Trésorier Régional">Trésorier Régional</option>
-                <option value="Secrétaire à l'Organisation">Secrétaire à l'Organisation</option>
-                <option value="Secrétaire aux Relations Extérieures">Secrétaire aux Relations Extérieures</option>
-                <option value="Secrétaire à la Communication">Secrétaire à la Communication</option>
-                <option value="Secrétaire à l'Éducation">Secrétaire à l'Éducation</option>
-                <option value="Secrétaire aux Activités">Secrétaire aux Activités</option>
-                <option value="Secrétaire à la Culture">Secrétaire à la Culture</option>
-                <option value="Secrétaire aux Sports">Secrétaire aux Sports</option>
-                <option value="Membre du Bureau">Membre du Bureau</option>
-              </select>
-            </div>
-
-            <!-- Nom du président -->
-            <div class="form-group">
-              <label class="form-label">Nom du président *</label>
-              <input
-                v-model="form.nom_president"
-                type="text"
-                required
-                class="form-input"
-                placeholder="Ex: Mohamed Traoré"
-              />
-            </div>
-
-            <!-- Nom du vice-président -->
-            <div class="form-group">
-              <label class="form-label">Nom du vice-président</label>
-              <input
-                v-model="form.nom_vice_president"
-                type="text"
-                class="form-input"
-                placeholder="Ex: Fatou Diallo"
-              />
-            </div>
-
-            <!-- Nom du trésorier -->
-            <div class="form-group">
-              <label class="form-label">Nom du trésorier</label>
-              <input
-                v-model="form.nom_tresorier"
-                type="text"
-                class="form-input"
-                placeholder="Ex: Amadou Coulibaly"
-              />
-            </div>
-
-            <!-- Nom du secrétaire -->
-            <div class="form-group">
-              <label class="form-label">Nom du secrétaire</label>
-              <input
-                v-model="form.nom_secretaire"
-                type="text"
-                class="form-input"
-                placeholder="Ex: Aissatou Ba"
-              />
-            </div>
-
-            <!-- Email -->
-            <div class="form-group">
-              <label class="form-label">Email</label>
-              <input
-                v-model="form.email"
-                type="email"
-                class="form-input"
-                placeholder="Ex: bureau@aeemci.org"
-              />
-            </div>
-
-            <!-- Téléphone -->
-            <div class="form-group">
-              <label class="form-label">Téléphone</label>
-              <input
-                v-model="form.telephone"
-                type="tel"
-                class="form-input"
-                placeholder="Ex: +225 07 12 34 56 78"
-              />
-            </div>
-
-            <!-- Adresse -->
-            <div class="form-group">
-              <label class="form-label">Adresse du bureau</label>
-              <textarea
-                v-model="form.adresse"
-                class="form-input"
-                rows="3"
-                placeholder="Ex: Rue de la République, Abidjan, Côte d'Ivoire"
-              ></textarea>
-            </div>
-
-            <!-- Description -->
-            <div class="form-group">
-              <label class="form-label">Description du bureau</label>
-              <textarea
-                v-model="form.description"
-                class="form-input"
-                rows="4"
-                placeholder="Description du bureau et de ses activités..."
-              ></textarea>
-            </div>
-
-            <div class="form-actions">
+              
+            <div class="flex gap-3 justify-center">
               <button
-                type="button"
                 @click="closeModal"
-                class="btn-secondary"
+                class="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
               >
                 Annuler
               </button>
               <button
-                type="submit"
-                :disabled="isSubmitting"
-                class="btn-primary"
+                @click="verifyMatricule"
+                :disabled="isVerifying || !matriculeInput.trim()"
+                class="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:from-emerald-700 hover:to-teal-700 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-2 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
               >
-                <svg v-if="isSubmitting" class="spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg v-if="isVerifying" class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                 </svg>
-                {{ isSubmitting ? 'Enregistrement...' : (showEditModal ? 'Modifier' : 'Ajouter') }}
+                <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                {{ isVerifying ? 'Vérification...' : 'Vérifier le matricule' }}
               </button>
             </div>
-          </form>
+          </div>
+
+          <!-- Étape 2: Formulaire de création -->
+          <div v-if="currentStep === 2 || showEditModal">
+            <!-- Informations récupérées (si ajout) -->
+            <div v-if="foundUser && !showEditModal" class="mb-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl">
+              <div class="flex items-center gap-3">
+                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <h4 class="text-sm font-bold text-emerald-800">Informations récupérées avec succès</h4>
+              </div>
+            </div>
+
+            <form @submit.prevent="submitForm" class="space-y-5">
+              <!-- Matricule du membre (automatique) -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Matricule du membre *</label>
+                <input
+                  v-model="form.matricule_membre"
+                  type="text"
+                  required
+                  class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                  :disabled="true"
+                  placeholder="Matricule du membre"
+                />
+                <p class="text-xs text-gray-500 mt-1">Ce champ est automatiquement rempli</p>
+              </div>
+
+              <!-- Nom du bureau -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Nom du bureau *</label>
+                <input
+                  v-model="form.nom_bureau"
+                  type="text"
+                  required
+                  class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                  placeholder="Ex: Bureau de Coordination"
+                />
+              </div>
+
+              <!-- Poste -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Poste *</label>
+                <select
+                  v-model="form.poste"
+                  required
+                  class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                >
+                  <option value="">Sélectionner un poste</option>
+                  <option value="Secrétaire Régional">Secrétaire Régional</option>
+                  <option value="Vice-Secrétaire Régional">Vice-Secrétaire Régional</option>
+                  <option value="Trésorier Régional">Trésorier Régional</option>
+                  <option value="Secrétaire à l'Organisation">Secrétaire à l'Organisation</option>
+                  <option value="Secrétaire aux Relations Extérieures">Secrétaire aux Relations Extérieures</option>
+                  <option value="Secrétaire à la Communication">Secrétaire à la Communication</option>
+                  <option value="Secrétaire à l'Éducation">Secrétaire à l'Éducation</option>
+                  <option value="Secrétaire aux Activités">Secrétaire aux Activités</option>
+                  <option value="Secrétaire à la Culture">Secrétaire à la Culture</option>
+                  <option value="Secrétaire aux Sports">Secrétaire aux Sports</option>
+                  <option value="Membre du Bureau">Membre du Bureau</option>
+                </select>
+              </div>
+
+              <!-- Nom du président -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Nom du président *</label>
+                <input
+                  v-model="form.nom_president"
+                  type="text"
+                  required
+                  class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                  placeholder="Ex: Mohamed Traoré"
+                />
+              </div>
+
+              <!-- Nom du vice-président -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Nom du vice-président</label>
+                <input
+                  v-model="form.nom_vice_president"
+                  type="text"
+                  class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                  placeholder="Ex: Fatou Diallo"
+                />
+              </div>
+
+              <!-- Nom du trésorier -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Nom du trésorier</label>
+                <input
+                  v-model="form.nom_tresorier"
+                  type="text"
+                  class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                  placeholder="Ex: Amadou Coulibaly"
+                />
+              </div>
+
+              <!-- Nom du secrétaire -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Nom du secrétaire</label>
+                <input
+                  v-model="form.nom_secretaire"
+                  type="text"
+                  class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                  placeholder="Ex: Aissatou Ba"
+                />
+              </div>
+
+              <!-- Email -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                <input
+                  v-model="form.email"
+                  type="email"
+                  class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                  placeholder="Ex: bureau@aeemci.org"
+                />
+              </div>
+
+              <!-- Téléphone -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Téléphone</label>
+                <input
+                  v-model="form.telephone"
+                  type="tel"
+                  class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                  placeholder="Ex: +225 07 12 34 56 78"
+                />
+              </div>
+
+              <!-- Adresse -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Adresse du bureau</label>
+                <textarea
+                  v-model="form.adresse"
+                  class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                  rows="3"
+                  placeholder="Ex: Rue de la République, Abidjan, Côte d'Ivoire"
+                ></textarea>
+              </div>
+
+              <!-- Description -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Description du bureau</label>
+                <textarea
+                  v-model="form.description"
+                  class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                  rows="4"
+                  placeholder="Description du bureau et de ses activités..."
+                ></textarea>
+              </div>
+
+              <div class="flex gap-3 justify-end pt-6 border-t border-emerald-200">
+                <button
+                  v-if="currentStep === 2 && !showEditModal"
+                  type="button"
+                  @click="backToVerification"
+                  class="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 flex items-center gap-2 font-medium"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                  </svg>
+                  Retour
+                </button>
+                <button
+                  type="button"
+                  @click="closeModal"
+                  class="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  :disabled="isSubmitting"
+                  class="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:from-emerald-700 hover:to-teal-700 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
+                >
+                  {{ isSubmitting ? 'Enregistrement...' : (showEditModal ? 'Modifier' : 'Ajouter') }}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div
-      v-if="showDeleteModal"
-      class="modal-overlay"
-      @click="closeDeleteModal"
-    >
-      <div class="modal-content" @click.stop style="max-width: 400px;">
-        <div class="modal-body">
-          <div class="modal-header">
-            <h2 class="modal-title">Confirmer la suppression</h2>
-            <button @click="closeDeleteModal" class="modal-close">
-              <svg class="close-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Enhanced delete modal -->
+    <div v-if="showDeleteModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn" @click="closeDeleteModal">
+      <div class="backdrop-blur-xl bg-white/95 rounded-2xl shadow-2xl max-w-md w-full animate-slideUp" @click.stop>
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-gray-900">Confirmer la suppression</h3>
+            <button @click="closeDeleteModal" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
             </button>
           </div>
-          <p class="text-gray-600 mb-6">Êtes-vous sûr de vouloir supprimer ce bureau ? Cette action est irréversible.</p>
-          <div class="form-actions">
-            <button @click="closeDeleteModal" class="btn-secondary">Annuler</button>
-            <button @click="deleteBureau" class="btn-danger">Supprimer</button>
+          <div class="text-center py-4">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+            </div>
+            <p class="text-gray-700 mb-2">Êtes-vous sûr de vouloir supprimer le bureau</p>
+            <p class="font-bold text-gray-900 mb-2">"{{ deleteName }}"</p>
+            <p class="text-sm text-red-600 font-medium">Cette action est irréversible !</p>
           </div>
+          <div class="flex gap-3 mt-6">
+            <button
+              @click="closeDeleteModal"
+              class="flex-1 px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
+            >
+              Annuler
+            </button>
+            <button
+              @click="deleteBureau(deleteId)"
+              class="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enhanced notifications -->
+    <div class="fixed top-4 right-4 z-[60] max-w-sm space-y-2">
+      <div
+        v-for="notification in notifications"
+        :key="notification.id"
+        :class="[
+          'backdrop-blur-xl rounded-xl shadow-2xl border-2 p-4 cursor-pointer transform transition-all duration-300 hover:scale-105 animate-slideInRight',
+          notification.type === 'success' ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800' : '',
+          notification.type === 'error' ? 'bg-red-50/95 border-red-200 text-red-800' : '',
+          notification.type === 'warning' ? 'bg-amber-50/95 border-amber-200 text-amber-800' : '',
+          notification.type === 'info' ? 'bg-blue-50/95 border-blue-200 text-blue-800' : ''
+        ]"
+        @click="removeNotification(notification.id)"
+      >
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 text-2xl">
+            <span v-if="notification.type === 'success'">✅</span>
+            <span v-else-if="notification.type === 'error'">❌</span>
+            <span v-else-if="notification.type === 'warning'">⚠️</span>
+            <span v-else>ℹ️</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-sm">{{ notification.message }}</p>
+            <p class="text-xs opacity-75 mt-1">{{ formatTime(notification.timestamp) }}</p>
+          </div>
+          <button @click.stop="removeNotification(notification.id)" class="flex-shrink-0 text-xl opacity-50 hover:opacity-100 transition-opacity">×</button>
         </div>
       </div>
     </div>
@@ -332,11 +498,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { getCurrentUserMatricule } from '../../utils/database.js'
 
 // API spécifique pour les bureaux SR
 const BUREAUX_API_URL = 'https://sogetrag.com/apistage/bureaux_sr_api.php'
+const ORGANES_API_URL = 'https://sogetrag.com/api/organes-api.php'
 
 const isLoading = ref(false)
 const isSubmitting = ref(false)
@@ -346,7 +513,16 @@ const bureaux = ref([])
 const showAddModal = ref(false)
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
-const bureauToDelete = ref(null)
+const deleteId = ref(null)
+const deleteName = ref('')
+const notifications = ref([])
+
+// Système de vérification en 2 étapes
+const currentStep = ref(1)
+const matriculeInput = ref('')
+const isVerifying = ref(false)
+const verificationError = ref('')
+const foundUser = ref(null)
 
 // Form data
 const form = ref({
@@ -363,24 +539,7 @@ const form = ref({
   description: ''
 })
 
-// Initialize form with current user matricule
-const initializeForm = () => {
-  const matricule = getCurrentUserMatricule()
-  form.value = {
-    matricule_membre: matricule || '',
-    nom_bureau: '',
-    poste: '',
-    nom_president: '',
-    nom_vice_president: '',
-    nom_tresorier: '',
-    nom_secretaire: '',
-    email: '',
-    telephone: '',
-    adresse: '',
-    description: ''
-  }
-}
-
+const editingId = ref(null)
 
 // Load bureaux
 const loadBureaux = async () => {
@@ -406,19 +565,93 @@ const loadBureaux = async () => {
   } catch (error) {
     console.error('Erreur lors du chargement des bureaux:', error)
     bureaux.value = []
+    addNotification('Erreur lors du chargement des bureaux', 'error')
   } finally {
     isLoading.value = false
   }
 }
 
+// Vérifier le matricule
+const verifyMatricule = async () => {
+  if (!matriculeInput.value.trim()) {
+    verificationError.value = 'Veuillez saisir un matricule'
+    return
+  }
+  
+  isVerifying.value = true
+  verificationError.value = ''
+  foundUser.value = null
+  
+  try {
+    console.log('🔍 Vérification du matricule:', matriculeInput.value)
+    
+    const response = await fetch(`${ORGANES_API_URL}?action=get_user_by_matricule2`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        matricule: matriculeInput.value.trim()
+      })
+    })
+
+    const data = await response.json()
+
+    if (data.success && data.user) {
+      console.log('✅ Utilisateur trouvé:', data.user)
+      foundUser.value = data.user
+      
+      const nomComplet = data.user.nom + (data.user.prenom ? ' ' + data.user.prenom : '')
+      
+      // Pré-remplir le formulaire avec les informations récupérées
+      form.value = {
+        matricule_membre: data.user.matricule || matriculeInput.value.trim(),
+        nom_bureau: '',
+        poste: '',
+        nom_president: nomComplet,
+        nom_vice_president: '',
+        nom_tresorier: '',
+        nom_secretaire: '',
+        email: data.user.email || '',
+        telephone: data.user.telephone || data.user.contact || data.user.phone || '',
+        adresse: data.user.ville_commune || data.user.ville || data.user.lieu || '',
+        description: ''
+      }
+      
+      currentStep.value = 2
+      addNotification('Informations du membre récupérées avec succès!', 'success')
+    } else {
+      console.log('❌ Aucun utilisateur trouvé')
+      verificationError.value = data.error || 'Aucun utilisateur trouvé avec ce matricule'
+    }
+  } catch (err) {
+    console.error('💥 Erreur lors de la vérification:', err)
+    verificationError.value = 'Erreur lors de la vérification du matricule'
+  } finally {
+    isVerifying.value = false
+  }
+}
+
+// Retour à l'étape 1
+const backToVerification = () => {
+  currentStep.value = 1
+  foundUser.value = null
+  resetForm()
+}
+
 // Open add modal
 const openAddModal = () => {
-  initializeForm()
+  resetForm()
+  currentStep.value = 1
+  matriculeInput.value = ''
+  verificationError.value = ''
+  foundUser.value = null
   showAddModal.value = true
 }
 
 // Edit bureau
 const editBureau = (bureau) => {
+  editingId.value = bureau.id
   form.value = {
     matricule_membre: bureau.matricule_membre,
     nom_bureau: bureau.nom_bureau || '',
@@ -434,20 +667,42 @@ const editBureau = (bureau) => {
   }
   
   showEditModal.value = true
-  bureauToDelete.value = bureau
 }
 
 // Close modal
 const closeModal = () => {
   showAddModal.value = false
   showEditModal.value = false
-  initializeForm()
+  resetForm()
+  currentStep.value = 1
+  matriculeInput.value = ''
+  verificationError.value = ''
+  foundUser.value = null
+}
+
+// Reset form
+const resetForm = () => {
+  const matricule = getCurrentUserMatricule()
+  form.value = {
+    matricule_membre: matricule || '',
+    nom_bureau: '',
+    poste: '',
+    nom_president: '',
+    nom_vice_president: '',
+    nom_tresorier: '',
+    nom_secretaire: '',
+    email: '',
+    telephone: '',
+    adresse: '',
+    description: ''
+  }
+  editingId.value = null
 }
 
 // Submit form
 const submitForm = async () => {
   if (!form.value.matricule_membre || !form.value.nom_bureau || !form.value.poste || !form.value.nom_president) {
-    alert('Veuillez remplir tous les champs obligatoires (nom du bureau, poste et nom du président)')
+    addNotification('Veuillez remplir tous les champs obligatoires', 'error')
     return
   }
 
@@ -466,7 +721,7 @@ const submitForm = async () => {
       telephone: form.value.telephone || null,
       adresse: form.value.adresse || null,
       description: form.value.description || null,
-      ...(showEditModal.value && bureauToDelete.value ? { id: bureauToDelete.value.id } : {})
+      ...(showEditModal.value && editingId.value ? { id: editingId.value } : {})
     }
 
     const response = await fetch(BUREAUX_API_URL, {
@@ -480,33 +735,35 @@ const submitForm = async () => {
     const result = await response.json()
 
     if (result.success) {
-      alert(showEditModal.value ? 'Bureau modifié avec succès' : 'Bureau ajouté avec succès')
+      addNotification(showEditModal.value ? 'Bureau modifié avec succès' : 'Bureau ajouté avec succès', 'success')
       closeModal()
       await loadBureaux()
     } else {
-      alert(result.error || 'Erreur lors de l\'enregistrement')
+      addNotification(result.error || 'Erreur lors de l\'enregistrement', 'error')
     }
   } catch (error) {
     console.error('Erreur:', error)
-    alert('Erreur lors de l\'enregistrement du bureau')
+    addNotification('Erreur lors de l\'enregistrement du bureau', 'error')
   } finally {
     isSubmitting.value = false
   }
 }
 
 // Delete bureau
-const confirmDelete = (id) => {
-  bureauToDelete.value = bureaux.value.find(b => b.id === id)
+const confirmDelete = (id, nom) => {
+  deleteId.value = id
+  deleteName.value = nom || 'ce bureau'
   showDeleteModal.value = true
 }
 
 const closeDeleteModal = () => {
   showDeleteModal.value = false
-  bureauToDelete.value = null
+  deleteId.value = null
+  deleteName.value = ''
 }
 
 const deleteBureau = async () => {
-  if (!bureauToDelete.value) return
+  if (!deleteId.value) return
 
   try {
     const response = await fetch(BUREAUX_API_URL, {
@@ -516,33 +773,62 @@ const deleteBureau = async () => {
       },
       body: JSON.stringify({
         action: 'delete_bureau',
-        id: bureauToDelete.value.id
+        id: deleteId.value
       })
     })
 
     const result = await response.json()
 
     if (result.success) {
-      alert('Bureau supprimé avec succès')
+      addNotification('Bureau supprimé avec succès', 'success')
       closeDeleteModal()
       await loadBureaux()
     } else {
-      alert(result.error || 'Erreur lors de la suppression')
+      addNotification(result.error || 'Erreur lors de la suppression', 'error')
     }
   } catch (error) {
     console.error('Erreur:', error)
-    alert('Erreur lors de la suppression du bureau')
+    addNotification('Erreur lors de la suppression du bureau', 'error')
   }
 }
 
-// Format date
+// Notifications
+const addNotification = (message, type = 'info') => {
+  const id = Date.now()
+  notifications.value.push({
+    id,
+    message,
+    type,
+    timestamp: new Date()
+  })
+  
+  setTimeout(() => {
+    removeNotification(id)
+  }, 5000)
+}
+
+const removeNotification = (id) => {
+  const index = notifications.value.findIndex(n => n.id === id)
+  if (index > -1) {
+    notifications.value.splice(index, 1)
+  }
+}
+
+// Formatage
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
   const date = new Date(dateString)
   return date.toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+}
+
+const formatTime = (date) => {
+  return date.toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit'
   })
 }
 
@@ -552,182 +838,82 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Styles similaires à MesSr.vue */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
+/* Added animations and improved styles */
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
 }
 
-.modal-content {
-  background: white;
-  border-radius: 12px;
-  width: 100%;
-  max-width: 500px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.5rem;
-  border-bottom: 1px solid #e4e6ea;
-}
-
-.modal-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #050505;
-  margin: 0;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-}
-
-.modal-close:hover {
-  background: #f0f2f5;
-}
-
-.close-icon {
-  width: 24px;
-  height: 24px;
-  color: #65676b;
-}
-
-.modal-body {
-  padding: 1.5rem;
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #050505;
-}
-
-.form-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #e4e6ea;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-}
-
-.form-input:disabled {
-  background: #f0f2f5;
-  cursor: not-allowed;
-}
-
-.form-actions {
-  display: flex;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.btn-primary,
-.btn-secondary,
-.btn-danger {
-  flex: 1;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: #f0f2f5;
-  color: #050505;
-}
-
-.btn-secondary:hover {
-  background: #e4e6ea;
-}
-
-.btn-danger {
-  background: #ef4444;
-  color: white;
-}
-
-.btn-danger:hover {
-  background: #dc2626;
-}
-
-.spinner {
-  width: 16px;
-  height: 16px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
+@keyframes fadeIn {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
   }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
   }
 }
 
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .backdrop-blur-sm {
+    backdrop-filter: blur(8px);
+  }
+  
+  .backdrop-blur-xl {
+    backdrop-filter: blur(16px);
+  }
 }
 </style>
-

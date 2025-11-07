@@ -33,19 +33,7 @@
       <div class="p-8 space-y-6">
 
         <!-- Boutons Modifier / Enregistrer / Annuler -->
-        <div class="flex justify-center mb-6 gap-4">
-          <button v-if="!editing" @click="editing = true" class="px-10 py-3 bg-indigo-600 text-white font-semibold rounded-full shadow-lg hover:bg-indigo-700 transform transition duration-300 hover:scale-105">
-            ✏️ Modifier le profil
-          </button>
-          <template v-else>
-            <button @click="saveChanges" class="px-10 py-3 bg-indigo-600 text-white font-semibold rounded-full shadow-lg hover:bg-indigo-700 transform transition duration-300 hover:scale-105">
-              💾 Enregistrer
-            </button>
-            <button @click="cancelEdit" class="px-10 py-3 bg-gray-400 text-white font-semibold rounded-full shadow-lg hover:bg-gray-500 transform transition duration-300 hover:scale-105">
-              ❌ Annuler
-            </button>
-          </template>
-        </div>
+       
 
         <!-- Informations personnelles -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -85,6 +73,21 @@
           <input v-model="editableUser.prenom" placeholder="Prénom" class="input-style"/>
         </div>
 
+        <!-- Boutons Modifier / Enregistrer / Annuler -->
+        <div class="flex justify-center mb-6 gap-4">
+          <button v-if="!editing" @click="editing = true" class="px-10 py-3 bg-indigo-600 text-white font-semibold rounded-full shadow-lg hover:bg-indigo-700 transform transition duration-300 hover:scale-105">
+            ✏️ Modifier le profil
+          </button>
+          <template v-else>
+            <button @click="saveChanges" class="px-10 py-3 bg-indigo-600 text-white font-semibold rounded-full shadow-lg hover:bg-indigo-700 transform transition duration-300 hover:scale-105">
+              💾 Enregistrer
+            </button>
+            <button @click="cancelEdit" class="px-10 py-3 bg-gray-400 text-white font-semibold rounded-full shadow-lg hover:bg-gray-500 transform transition duration-300 hover:scale-105">
+              ❌ Annuler
+            </button>
+          </template>
+        </div>
+
       </div>
     </div>
   </div>
@@ -113,6 +116,7 @@ const saveChanges = async () => {
         section: editableUser.value.section,
         poste: editableUser.value.poste_definition,
         contact: editableUser.value.contact || '',
+        statut: user.value.je_suis
       })
     })
     const data = await response.json()

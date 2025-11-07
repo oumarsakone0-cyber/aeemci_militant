@@ -308,10 +308,8 @@ const loadUserProfile = async () => {
 
     if (result.success && result.data) {
       // Utiliser photo_url depuis la base de données (photo_membre)
-      // Filtrer TOUTES les URLs Cloudinary car elles retournent 401 (Unauthorized)
       let photoUrl = result.data.photo_url || result.data.photo_membre || null
       
-      // Filtrer toutes les URLs Cloudinary (même pattern que dans Posts.vue)
       const defaultImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
       
       if (!photoUrl || typeof photoUrl !== 'string') {
@@ -328,11 +326,8 @@ const loadUserProfile = async () => {
           const baseUrl = 'http://sogetrag.com/apistage/'
           photoUrl = baseUrl + (trimmedUrl.startsWith('/') ? trimmedUrl.substring(1) : trimmedUrl)
         }
-        // FILTRER TOUTES LES URLs CLOUDINARY
-        else if (trimmedUrl.includes('cloudinary.com') || trimmedUrl.includes('res.cloudinary')) {
-          console.warn('🚫 URL Cloudinary filtrée dans HeaderAndHero:', trimmedUrl)
-          photoUrl = defaultImage
-        }
+        // Pour les URLs Cloudinary, on les laisse passer - le gestionnaire @error les remplacera si elles échouent
+        // Cela évite les erreurs "Tracking Prevention" car on ne bloque plus préventivement
       }
 
       userProfile.value = {
@@ -397,11 +392,17 @@ const notifications = ref([
 ])
 
 const onImageError = (event) => {
-  // Si l'image ne peut pas être chargée, utiliser l'image par défaut
+  // Si l'image ne peut pas être chargée (Cloudinary bloqué, 401, Tracking Prevention, etc.), utiliser l'image par défaut
   const defaultImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
   if (event.target && event.target.src !== defaultImage) {
+    // Empêcher les tentatives répétées
+    event.target.onerror = null
     event.target.src = defaultImage
-    event.target.onerror = null // Empêcher les boucles infinies
+    // Mettre à jour aussi le profil pour éviter de réessayer
+    if (userProfile.value) {
+      userProfile.value.photo_membre = defaultImage
+      userProfile.value.photo_url = defaultImage
+    }
   }
 }
 

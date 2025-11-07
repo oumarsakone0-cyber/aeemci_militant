@@ -209,9 +209,11 @@
                 v-model="matriculeInput"
                 type="text"
                 required
+                maxlength="15"
                 class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
-                placeholder="Ex: BEL-SOU-18-001"
+                placeholder="XXX-XXX-XX-XXX"
                 :disabled="isVerifying"
+                @input="formatMatricule"
               />
               <div v-if="verificationError" class="mt-2 text-sm text-red-600 font-medium">
                 {{ verificationError }}
@@ -520,6 +522,27 @@ const notifications = ref([])
 // Système de vérification en 2 étapes
 const currentStep = ref(1)
 const matriculeInput = ref('')
+
+// Formatage automatique du matricule (comme dans Login.vue)
+const formatMatricule = () => {
+  const value = matriculeInput.value.toUpperCase()
+  let formatted = value.replace(/[^A-Z0-9]/g, '')
+  
+  if (formatted.length > 3) {
+    formatted = formatted.slice(0, 3) + '-' + formatted.slice(3)
+  }
+  if (formatted.length > 7) {
+    formatted = formatted.slice(0, 7) + '-' + formatted.slice(7)
+  }
+  if (formatted.length > 10) {
+    formatted = formatted.slice(0, 10) + '-' + formatted.slice(10)
+  }
+  if (formatted.length > 15) {
+    formatted = formatted.slice(0, 15)
+  }
+  
+  matriculeInput.value = formatted
+}
 const isVerifying = ref(false)
 const verificationError = ref('')
 const foundUser = ref(null)

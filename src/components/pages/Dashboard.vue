@@ -152,14 +152,15 @@
           </router-link>
 
           <!-- Bibliotheque -->
+
           <router-link to="/bibliotheque" class="group">
-            <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-emerald-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <div class="w-16 h-16 mx-auto bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-500/50 transition-all">
+            <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-amber-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div class="w-16 h-16 mx-auto bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:shadow-amber-500/50 transition-all">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
+                  <path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/>
                 </svg>
               </div>
-              <div class="text-xs text-center font-semibold text-gray-700 group-hover:text-emerald-600 transition-colors leading-tight">
+              <div class="text-xs text-center font-semibold text-gray-700 group-hover:text-amber-600 transition-colors leading-tight">
                 Bibliothèque
               </div>
             </div>
@@ -168,19 +169,18 @@
           <router-link to="/documents" class="group">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-emerald-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-500/50 transition-all">
-               <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 4a8 8 0 00-8 8v5a1 1 0 001 1h2v-4H6v-2a6 6 0 0112 0v2h-1v4h2a1 1 0 001-1v-5a8 8 0 00-8-8z" />
-                  <path d="M9 19h6v-6H9v6z" />
+               <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
                 </svg>
               </div>
               <div class="text-xs text-center font-semibold text-gray-700 group-hover:text-emerald-600 transition-colors leading-tight">
-                Mes Documents
+                Documents Aeemci
               </div>
             </div>
           </router-link>
 
 
-          <!-- Coin spirituel -->
+          <!-- Coin spirituel
           <router-link to="/coins" class="group">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-violet-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-violet-500 to-violet-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-violet-500/30 group-hover:shadow-violet-500/50 transition-all">
@@ -193,8 +193,9 @@
               </div>
             </div>
           </router-link>
+           -->
 
-          <!-- Messages importants -->
+          <!-- Messages importants 
           <router-link to="/messages" class="group">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-rose-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-rose-500 to-rose-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-rose-500/30 group-hover:shadow-rose-500/50 transition-all">
@@ -207,9 +208,10 @@
               </div>
             </div>
           </router-link>
+          -->
 
           <!-- Mes livres -->
-          <router-link to="/mes_livres" class="group">
+          <router-link to="/zoom" class="group">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-amber-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:shadow-amber-500/50 transition-all">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -217,7 +219,7 @@
                 </svg>
               </div>
               <div class="text-xs text-center font-semibold text-gray-700 group-hover:text-amber-600 transition-colors leading-tight">
-                Mes<br/>livres
+                Formation Zoom
               </div>
             </div>
           </router-link>
@@ -245,7 +247,20 @@
                 </svg>
               </div>
               <div class="text-xs text-center font-semibold text-gray-700 group-hover:text-indigo-600 transition-colors leading-tight">
-                Mes<br/>Sous-comités
+                Mes Sous<br/>comités
+              </div>
+            </div>
+          </router-link>
+
+          <router-link to="/mes_sous_comites" class="group" v-if="user.je_suis === 'SR_SR' || user.je_suis === 'CE_CE'">
+            <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-indigo-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div class="w-16 h-16 mx-auto bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-500/50 transition-all">
+                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                </svg>
+              </div>
+              <div class="text-xs text-center font-semibold text-gray-700 group-hover:text-indigo-600 transition-colors leading-tight">
+                Mes Sections
               </div>
             </div>
           </router-link>

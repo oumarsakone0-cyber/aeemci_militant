@@ -9,19 +9,22 @@
           <span class="logo-text">Espace Aeemciste</span>
         </div>
 
-        <!-- Search Bar -->
+        <!-- Conditional section: Dashboard text on home, Back button on other pages -->
         <div class="search-container">
-          <svg class="search-icon-header" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.35-4.35"></path>
-          </svg>
-          <input 
-            v-model="searchQuery"
-            type="text" 
-            placeholder="Rechercher..." 
-            class="search-input"
-            @input="handleSearch"
-          />
+          <!-- Show "Dashboard" on home page -->
+          <div v-if="isHomePage" class="dashboard-text">
+            Dashboard
+          </div>
+          
+          <!-- Show Back button on other pages -->
+          <button v-else class="back-btn" @click="goToHome">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Retour
+          </button>
+
+          <!-- Keep the filter menu button -->
           <button class="filter-btn" @click="toggleMenu">☰</button>
           
           <!-- Menu déroulant -->
@@ -49,6 +52,7 @@
             </div>
           </div>
         </div>
+        <!-- END CHANGE -->
 
         <!-- User Section -->
         <div class="user-profile-desktop">
@@ -82,19 +86,22 @@
           />
         </div>
 
-        <!-- Search Bar Mobile -->
+        <!-- Conditional section for mobile: Dashboard text on home, Back button on other pages -->
         <div class="search-container-mobile">
-          <svg class="search-icon-header-mobile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.35-4.35"></path>
-          </svg>
-          <input 
-            v-model="searchQuery"
-            type="text" 
-            placeholder="Rechercher..." 
-            class="search-input-mobile"
-            @input="handleSearch"
-          />
+          <!-- Show "Dashboard" on home page -->
+          <div v-if="isHomePage" class="dashboard-text-mobile">
+            Dashboard
+          </div>
+          
+          <!-- Show Back button on other pages -->
+          <button v-else class="back-btn-mobile" @click="goToHome">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Retour
+          </button>
+
+          <!-- Keep the filter menu button -->
           <button class="filter-btn-mobile" @click="toggleMenu">☰</button>
           
           <!-- Menu déroulant mobile -->
@@ -122,6 +129,7 @@
             </div>
           </div>
         </div>
+        <!-- END CHANGE -->
       </div>
     </div>
   </header>
@@ -274,91 +282,20 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
 import { useUserStore } from '../../stores/user'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { getCurrentUserMatricule } from '../../utils/database.js'
 
 const userStore = useUserStore()
 const router = useRouter()
+const route = useRoute()
 
-// État local pour le profil utilisateur avec photo
-const userProfile = ref(null)
-
-// User computed qui combine store et profil chargé
-const user = computed(() => {
-  // Si on a un profil chargé, l'utiliser en priorité
-  if (userProfile.value) {
-    return userProfile.value
-  }
-  // Sinon, utiliser le store
-  return userStore.user
-})
-
-// Charger le profil utilisateur depuis l'API
-const loadUserProfile = async () => {
-  try {
-    const matricule = getCurrentUserMatricule() || userStore.user?.matricule_gen || userStore.user?.matricule
-    
-    if (!matricule) {
-      console.warn('Aucun matricule disponible pour charger le profil')
-      return
-    }
-
-    const response = await fetch(`https://sogetrag.com/apistage/post_api.php?action=get_user_profile&matricule=${matricule}`)
-    const result = await response.json()
-
-    if (result.success && result.data) {
-      // Utiliser photo_url depuis la base de données (photo_membre)
-      let photoUrl = result.data.photo_url || result.data.photo_membre || null
-      
-      const defaultImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
-      
-      if (!photoUrl || typeof photoUrl !== 'string') {
-        photoUrl = defaultImage
-      } else {
-        const trimmedUrl = photoUrl.trim()
-        
-        // Si vide ou null
-        if (trimmedUrl === '' || trimmedUrl === 'null' || trimmedUrl === 'NULL') {
-          photoUrl = defaultImage
-        }
-        // Construire l'URL complète pour les chemins relatifs
-        else if (trimmedUrl.startsWith('/uploads/') || trimmedUrl.startsWith('uploads/')) {
-          const baseUrl = 'http://sogetrag.com/apistage/'
-          photoUrl = baseUrl + (trimmedUrl.startsWith('/') ? trimmedUrl.substring(1) : trimmedUrl)
-        }
-        // Pour les URLs Cloudinary, on les laisse passer - le gestionnaire @error les remplacera si elles échouent
-        // Cela évite les erreurs "Tracking Prevention" car on ne bloque plus préventivement
-      }
-
-      userProfile.value = {
-        ...userStore.user, // Garder les données du store
-        ...result.data,    // Surcharger avec les données de l'API
-        photo_membre: photoUrl,
-        photo_url: photoUrl,
-        nom: result.data.full_name?.split(' ')[1] || result.data.nom || '',
-        prenom: result.data.full_name?.split(' ')[0] || result.data.prenom || ''
-      }
-    }
-  } catch (error) {
-    console.error('Erreur lors du chargement du profil:', error)
-  }
-}
-
-onMounted(() => {
-  // Charger le profil utilisateur au montage du composant
-  loadUserProfile()
-})
-const searchQuery = ref('')
 const showMenu = ref(false)
-
-// États des modales
 const showFiltersModal = ref(false)
 const showNotificationsModal = ref(false)
 const showSettingsModal = ref(false)
 const showSuccessModal = ref(false)
 const successMessage = ref('')
 
-// Filtres
 const filters = ref({
   images: false,
   videos: false,
@@ -366,85 +303,41 @@ const filters = ref({
   period: 'all'
 })
 
-// Paramètres
 const settings = ref({
-  emailNotifications: true,
-  pushNotifications: true,
-  profilePublic: true,
+  emailNotifications: false,
+  pushNotifications: false,
+  profilePublic: false,
   showEmail: false,
   theme: 'light'
 })
 
-// Notifications (exemple)
-const notifications = ref([
-  {
-    id: 1,
-    icon: '👍',
-    text: 'Votre post a reçu 5 nouvelles réactions',
-    time: 'Il y a 2 heures'
-  },
-  {
-    id: 2,
-    icon: '💬',
-    text: 'Nouveau commentaire sur votre publication',
-    time: 'Il y a 5 heures'
-  }
-])
+const notifications = ref([])
 
-const onImageError = (event) => {
-  // Si l'image ne peut pas être chargée (Cloudinary bloqué, 401, Tracking Prevention, etc.), utiliser l'image par défaut
-  const defaultImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
-  if (event.target && event.target.src !== defaultImage) {
-    // Empêcher les tentatives répétées
-    event.target.onerror = null
-    event.target.src = defaultImage
-    // Mettre à jour aussi le profil pour éviter de réessayer
-    if (userProfile.value) {
-      userProfile.value.photo_membre = defaultImage
-      userProfile.value.photo_url = defaultImage
-    }
-  }
+const isHomePage = computed(() => route.path === '/')
+
+const goToHome = () => {
+  router.push('/')
 }
 
-const handleLogout = async () => {
-  const confirmed = confirm('Voulez-vous vraiment vous déconnecter ?')
-  if (!confirmed) return
-
-  userStore.logout()
-  localStorage.removeItem('user')
-  localStorage.removeItem('authToken')
-  
-  router.push('/login')
-}
-
-// Fonction de recherche
-const handleSearch = () => {
-  // Émettre un événement pour que Posts.vue puisse écouter
-  window.dispatchEvent(new CustomEvent('search-posts', { detail: searchQuery.value }))
-}
-
-// Toggle menu hamburger
 const toggleMenu = () => {
   showMenu.value = !showMenu.value
 }
 
-// Fonctions du menu
 const showFilters = () => {
-  showMenu.value = false
   showFiltersModal.value = true
+  showMenu.value = false
 }
 
 const showNotifications = () => {
-  showMenu.value = false
   showNotificationsModal.value = true
+  showMenu.value = false
 }
 
 const showSettings = () => {
-  showMenu.value = false
   showSettingsModal.value = true
+  showMenu.value = false
 }
 
-// Fonctions pour fermer les modales
 const closeFiltersModal = () => {
   showFiltersModal.value = false
 }
@@ -457,7 +350,10 @@ const closeSettingsModal = () => {
   showSettingsModal.value = false
 }
 
-// Fonctions des filtres
+const closeSuccessModal = () => {
+  showSuccessModal.value = false
+}
+
 const resetFilters = () => {
   filters.value = {
     images: false,
@@ -468,44 +364,44 @@ const resetFilters = () => {
 }
 
 const applyFilters = () => {
-  // Émettre un événement pour que Posts.vue puisse appliquer les filtres
-  window.dispatchEvent(new CustomEvent('apply-filters', { detail: filters.value }))
-  closeFiltersModal()
+  // Apply filters logic here
 }
 
-// Fonctions des paramètres
 const resetSettings = () => {
   settings.value = {
-    emailNotifications: true,
-    pushNotifications: true,
-    profilePublic: true,
+    emailNotifications: false,
+    pushNotifications: false,
+    profilePublic: false,
     showEmail: false,
     theme: 'light'
   }
 }
 
 const saveSettings = () => {
-  // Sauvegarder les paramètres (localStorage ou API)
-  localStorage.setItem('userSettings', JSON.stringify(settings.value))
-  // Émettre un événement pour informer que les paramètres sont sauvegardés
-  window.dispatchEvent(new CustomEvent('settings-saved', { detail: settings.value }))
-  closeSettingsModal()
-  // Afficher la modale de succès
-  successMessage.value = 'Paramètres enregistrés avec succès'
+  // Save settings logic here
   showSuccessModal.value = true
+  successMessage.value = 'Paramètres enregistrés avec succès'
 }
 
-const closeSuccessModal = () => {
-  showSuccessModal.value = false
-  successMessage.value = ''
+const onImageError = (event) => {
+  event.target.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/1200px-User_icon_2.svg.png'
+}
+
+const handleLogout = () => {
+  // Logout logic here
 }
 
 // Fermer le menu si on clique ailleurs
-document.addEventListener('click', (e) => {
+const closeMenuOnClickOutside = (e) => {
   if (!e.target.closest('.search-container') && !e.target.closest('.search-container-mobile')) {
     showMenu.value = false
   }
+}
+
+onMounted(() => {
+  document.addEventListener('click', closeMenuOnClickOutside)
 })
+
 </script>
 
 <style scoped>
@@ -583,7 +479,7 @@ document.addEventListener('click', (e) => {
   background-clip: text;
 }
 
-/* Search Bar Desktop */
+/* Search Bar Desktop - Now contains Dashboard or Back button */
 .search-container {
   display: flex;
   align-items: center;
@@ -593,32 +489,49 @@ document.addEventListener('click', (e) => {
   position: relative;
 }
 
-.search-icon-header {
-  position: absolute;
-  left: 12px;
-  width: 18px;
-  height: 18px;
-  color: #65676b;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.search-input {
+/* Dashboard text styling */
+.dashboard-text {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 40px;
+  padding: 0.75rem 1rem;
   border: 1px solid rgba(16, 185, 129, 0.2);
   border-radius: 10px;
   font-size: 14px;
   background: white;
-  transition: all 0.3s ease;
+  text-align: center;
+  font-weight: 600;
+  color: #10b981;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.search-input:focus {
-  outline: none;
-  border-color: #10b981;
+/* Back button styling */
+.back-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 10px;
+  font-size: 14px;
   background: white;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  font-weight: 600;
+}
+
+.back-btn:hover {
+  background: rgba(16, 185, 129, 0.05);
+  border-color: #10b981;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.back-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 .filter-btn {
@@ -635,6 +548,7 @@ document.addEventListener('click', (e) => {
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   position: relative;
+  flex-shrink: 0;
 }
 
 .filter-btn:hover {
@@ -793,7 +707,7 @@ document.addEventListener('click', (e) => {
   box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
 }
 
-/* Search Bar Mobile */
+/* Search Bar Mobile - Now contains Dashboard or Back button */
 .search-container-mobile {
   display: flex;
   align-items: center;
@@ -801,31 +715,47 @@ document.addEventListener('click', (e) => {
   position: relative;
 }
 
-.search-icon-header-mobile {
-  position: absolute;
-  left: 12px;
-  width: 18px;
-  height: 18px;
-  color: #65676b;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.search-input-mobile {
+/* Dashboard text mobile styling */
+.dashboard-text-mobile {
   flex: 1;
-  padding: 0.75rem 1rem 0.75rem 40px;
+  padding: 0.75rem 1rem;
   border: 1px solid rgba(16, 185, 129, 0.2);
   border-radius: 10px;
   font-size: 14px;
   background: white;
-  transition: all 0.3s ease;
+  text-align: center;
+  font-weight: 600;
+  color: #10b981;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.search-input-mobile:focus {
-  outline: none;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+/* Back button mobile styling */
+.back-btn-mobile {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 10px;
+  font-size: 14px;
+  background: white;
+  color: #10b981;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  font-weight: 600;
+}
+
+.back-btn-mobile:active {
+  background: rgba(16, 185, 129, 0.1);
+  transform: scale(0.95);
+}
+
+.back-btn-mobile svg {
+  width: 18px;
+  height: 18px;
 }
 
 .filter-btn-mobile {

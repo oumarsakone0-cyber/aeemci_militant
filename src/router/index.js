@@ -25,6 +25,7 @@ import Quiz from "../components/pages/Quiz.vue"
 import Meet from "../components/pages/Meet.vue"
 import PageProfile from "../components/pages/PageProfile.vue"
 import DocPage from "../components/pages/DocPage.vue"
+import FormationsZoom from "../components/pages/FormationsZoom.vue"
 
 const routes = [
   { path: "/", name: "dashboard", component: Dashboard },
@@ -38,6 +39,7 @@ const routes = [
   { path: "/inscription", name: "inscription", component: Inscription },
   { path: "/mes_sous_comites", name: "mes_sous_comites", component: MesSousComites },
   { path: "/bibliotheque", name: "bibliotheque", component: Bibliotheque },
+  { path: "/zoom", name: "zoom", component: FormationsZoom },
   { path: "/documents", name: "documents", component: DocPage },
 
   { path: "/social", name: "social", component: Social },

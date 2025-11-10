@@ -1,11 +1,9 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-green-50 relative overflow-hidden pb-24 md:pb-8">
-    <!-- Added decorative background elements for premium look -->
     <div class="absolute top-0 left-0 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
     <div class="absolute bottom-0 right-0 w-96 h-96 bg-teal-400/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
     <div class="absolute top-1/2 left-1/2 w-96 h-96 bg-green-400/10 rounded-full blur-3xl"></div>
 
-    <!-- Redesigned header with modern glassmorphism effect -->
     <header class="relative backdrop-blur-sm bg-white/80 shadow-lg border-b border-emerald-200/50 sticky top-0 z-40">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
         <div class="flex items-center justify-between flex-wrap gap-4">
@@ -42,7 +40,6 @@
     </header>
 
     <main class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-      <!-- Redesigned search and filters with modern card design -->
       <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-emerald-100/50 p-4 md:p-6 mb-6 md:mb-8 hover:shadow-2xl transition-shadow duration-300">
         <div class="flex flex-col lg:flex-row gap-3 md:gap-4">
           <div class="flex-1">
@@ -75,7 +72,6 @@
         </div>
       </div>
 
-      <!-- Redesigned books grid with enhanced cards and animations -->
       <div class="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6">
         <div
           v-for="book in filteredBooks"
@@ -122,7 +118,6 @@
         </div>
       </div>
 
-      <!-- Redesigned mobile list view with modern cards -->
       <div class="md:hidden space-y-3">
         <div
           v-for="book in filteredBooks"
@@ -171,7 +166,6 @@
         </div>
       </div>
 
-      <!-- Redesigned empty state -->
       <div v-if="filteredBooks.length === 0" class="text-center py-16">
         <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-emerald-100/50 p-8 max-w-md mx-auto">
           <svg class="mx-auto w-20 h-20 text-emerald-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -183,7 +177,6 @@
       </div>
     </main>
 
-    <!-- Redesigned reservation modal with glassmorphism -->
     <div
       v-if="showModal"
       style="z-index: 1111"
@@ -252,16 +245,6 @@
                 type="text"
                 required
                 placeholder="Email ou téléphone"
-                class="w-full px-4 py-3 border-2 border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2 text-left">Photo (optionnel)</label>
-              <input
-                @change="handlePhotoUpload"
-                type="file"
-                accept="image/*"
                 class="w-full px-4 py-3 border-2 border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
               />
             </div>
@@ -342,7 +325,95 @@
       </div>
     </div>
 
-    <!-- Redesigned add book modal with glassmorphism -->
+    <div
+      v-if="showConfirmationModal"
+      style="z-index: 1111"
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in"
+      @click="closeConfirmationModal"
+    >
+      <div
+        class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl max-w-md w-full border border-emerald-200/50 animate-scale-in overflow-hidden"
+        @click.stop
+      >
+        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 px-6 pt-8 pb-6 text-center">
+          <div class="mx-auto w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-4 animate-bounce-once">
+            <svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <h2 class="text-2xl font-bold text-white mb-2">
+            Réservation confirmée !
+          </h2>
+          <p class="text-emerald-50 text-sm">
+            Votre demande a été prise en compte
+          </p>
+        </div>
+
+        <div class="p-6 space-y-4">
+          <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-4 border border-emerald-200">
+            <div class="flex items-center space-x-3 mb-3">
+              <img
+                :src="confirmedReservation?.book?.image_url || 'https://upload.wikimedia.org/wikipedia/fr/4/42/Logo_AEEMCI.jpeg'"
+                :alt="confirmedReservation?.book?.titre"
+                class="w-12 h-16 object-cover rounded-lg shadow-md"
+                @error="(e) => e.target.src = 'https://upload.wikimedia.org/wikipedia/fr/4/42/Logo_AEEMCI.jpeg'"
+              />
+              <div class="flex-1 min-w-0">
+                <h3 class="font-bold text-gray-900 text-sm line-clamp-2">
+                  {{ confirmedReservation?.book?.titre }}
+                </h3>
+                <p class="text-xs text-gray-600">
+                  {{ confirmedReservation?.book?.auteur }}
+                </p>
+              </div>
+            </div>
+            
+            <div class="space-y-2">
+              <div class="flex items-center text-xs text-gray-700">
+                <svg class="w-4 h-4 text-emerald-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                <span class="font-medium">{{ confirmedReservation?.name }}</span>
+              </div>
+              
+              <div class="flex items-center text-xs text-gray-700">
+                <svg class="w-4 h-4 text-emerald-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span>
+                  {{ confirmedReservation?.consultationType === 'on-site' ? 
+                    `${confirmedReservation?.readingDate} à ${confirmedReservation?.readingTime}` :
+                    `Du ${confirmedReservation?.startDate} au ${confirmedReservation?.endDate}`
+                  }}
+                </span>
+              </div>
+              
+              <div class="flex items-center text-xs text-gray-700">
+                <svg class="w-4 h-4 text-emerald-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span>
+                  {{ confirmedReservation?.consultationType === 'on-site' ? 
+                    'Lecture au siège' : 
+                    'Emprunt pour lecture externe'
+                  }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+
+          <button
+            @click="closeConfirmationModal"
+            class="w-full px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:shadow-lg hover:shadow-emerald-500/50 transition-all font-semibold active:scale-95"
+          >
+            Continuer ma navigation
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div
       v-if="showAddBookModal"
       style="z-index: 1111"
@@ -585,6 +656,9 @@ const searchQuery = ref('')
 const selectedCategory = ref('')
 const showModal = ref(false)
 const showAddBookModal = ref(false)
+const showConfirmationModal = ref(false)
+const confirmedReservation = ref(null)
+
 const selectedBook = ref(null)
 const isSubmitting = ref(false)
 const isAddingBook = ref(false)
@@ -715,6 +789,11 @@ const closeModal = () => {
   resetReservationForm()
 }
 
+const closeConfirmationModal = () => {
+  showConfirmationModal.value = false
+  confirmedReservation.value = null
+}
+
 const closeAddBookModal = () => {
   showAddBookModal.value = false
   resetAddBookForm()
@@ -723,7 +802,7 @@ const closeAddBookModal = () => {
 const resetReservationForm = () => {
   reservationForm.value = {
     matricule: userStore.user?.matricule_gen || "INCONNU",
-    name: userStore.user?.nom || "Nom Inconnu",
+    name: `${userStore.user?.nom || ""} ${userStore.user?.prenom || ""}`.trim() || "Nom Inconnu",
     contact: userStore.user?.contact || "Contact Inconnu",
     photo: null,
     consultationType: '',
@@ -847,22 +926,30 @@ const submitReservation = async () => {
         `Du ${reservationForm.value.startDate} au ${reservationForm.value.endDate}` : null
     }
 
-    const response = await fetch(API_BASE_URL, {
+    const response = await fetch(`${API_BASE_URL}?action=create_reservation&type=hotel`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        action: 'create_reservation',
-        ...reservationData
-      })
+      body: JSON.stringify(reservationData)
     })
     
     const data = await response.json()
     
     if (data.success) {
-      alert('Réservation confirmée ! Vous recevrez un email de confirmation.')
+      confirmedReservation.value = {
+        book: selectedBook.value,
+        name: reservationForm.value.name,
+        contact: reservationForm.value.contact,
+        consultationType: reservationForm.value.consultationType,
+        readingDate: reservationForm.value.readingDate,
+        readingTime: reservationForm.value.readingTime,
+        startDate: reservationForm.value.startDate,
+        endDate: reservationForm.value.endDate
+      }
+      
       closeModal()
+      showConfirmationModal.value = true
     } else {
       alert('Erreur lors de la réservation: ' + data.error)
     }
@@ -949,7 +1036,7 @@ onMounted(async () => {
   addBookForm.value.matricule = userStore.user?.matricule_gen || "INCONNU";
   addBookForm.value.name = userStore.user?.nom || "Nom Inconnu";
   reservationForm.value.matricule = userStore.user?.matricule_gen || "INCONNU";
-  reservationForm.value.name = userStore.user?.nom || "Nom Inconnu";
+  reservationForm.value.name = `${userStore.user?.nom || ""} ${userStore.user?.prenom || ""}`.trim() || "Nom Inconnu";
   reservationForm.value.contact = userStore.user?.contact || "Contact Inconnu";
   
   await loadBooks()
@@ -1003,6 +1090,15 @@ onMounted(async () => {
   }
 }
 
+@keyframes bounce-once {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.2s ease-out;
 }
@@ -1011,7 +1107,15 @@ onMounted(async () => {
   animation: scale-in 0.3s ease-out;
 }
 
+.animate-bounce-once {
+  animation: bounce-once 0.6s ease-in-out;
+}
+
 .active\:scale-98:active {
   transform: scale(0.98);
+}
+
+.active\:scale-95:active {
+  transform: scale(0.95);
 }
 </style>

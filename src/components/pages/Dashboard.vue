@@ -124,7 +124,49 @@
             </div>
           </div>
         </div>
- -->
+ -->    
+        <div
+          class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6 mb-6 md:p-8 md:mb-8 overflow-hidden relative"
+          v-if="userStore.user.je_suis === 'CE_CE' || userStore.user.je_suis === 'SR_SR' || userStore.user.je_suis === 'SR'"
+        >
+        <!-- Decorative gradient overlay -->
+         
+        <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-purple-100/50 to-transparent rounded-full blur-2xl"></div>
+        
+        <div class="relative z-10">
+          <div class="flex flex-col md:flex-row items-center gap-6">
+            <!-- Icon -->
+            <div class="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-purple-500 to-violet-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-purple-500/40">
+              <svg class="w-10 h-10 md:w-12 md:h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+              </svg>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 text-center md:text-left w-full">
+              <div class="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                <span class="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span>
+                Inscription ouverte
+              </div>
+              
+              <h3 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">Inscription CIMA</h3>
+
+              <!-- Button -->
+              <router-link to="/cima">
+                <button class="w-full bg-gradient-to-r from-purple-500 to-violet-600 text-white px-8 py-5 rounded-2xl font-bold shadow-2xl shadow-purple-500/40 hover:shadow-purple-500/60 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 text-lg md:text-xl group">
+                  <svg class="w-7 h-7 group-hover:rotate-12 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                  </svg>
+                  Inscrire un membre
+                  <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </button>
+              </router-link>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Quick Actions Section -->
       <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6 md:p-8">
@@ -225,7 +267,7 @@
           </router-link>
 
           <!-- Mes Secrétariats (CE_CE only) -->
-          <router-link to="/mes_sr" class="group" v-if="user.je_suis === 'CE_CE'">
+          <router-link to="/mes_sr" class="group" v-if="userStore.user.je_suis === 'CE_CE'">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-teal-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-teal-500/30 group-hover:shadow-teal-500/50 transition-all">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -239,7 +281,7 @@
           </router-link>
 
           <!-- Mes Sous-comités (SR_SR or CE_CE) -->
-          <router-link to="/mes_sous_comites" class="group" v-if="user.je_suis === 'SR_SR' || user.je_suis === 'CE_CE'">
+          <router-link to="/mes_sous_comites" class="group" v-if="userStore.user.je_suis === 'SR_SR' || userStore.user.je_suis === 'CE_CE'">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-indigo-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-500/50 transition-all">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -252,7 +294,7 @@
             </div>
           </router-link>
 
-          <router-link to="/mes_sous_comites" class="group" v-if="user.je_suis === 'SR_SR' || user.je_suis === 'CE_CE'">
+          <router-link to="/mes_sous_comites" class="group" v-if="userStore.user.je_suis === 'SR_SR' || userStore.user.je_suis === 'CE_CE'">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-indigo-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-500/50 transition-all">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -266,7 +308,7 @@
           </router-link>
 
           <!-- Mon Bureau (SR_SR or SC_SC) -->
-          <router-link to="/mon-bureau" class="group" v-if="user.je_suis === 'SR_SR' || user.je_suis === 'SC_SC'">
+          <router-link to="/mon-bureau" class="group" v-if="userStore.user.je_suis === 'SR_SR' || userStore.user.je_suis === 'SC_SC'">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-yellow-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-yellow-500/30 group-hover:shadow-yellow-500/50 transition-all">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -280,7 +322,7 @@
           </router-link>
 
           <!-- Mes rapports (SR_SR, SC_SC, or SECTION) -->
-          <router-link to="/mes-rapports" class="group" v-if="user.je_suis === 'SR_SR' || user.je_suis === 'SC_SC' || user.je_suis === 'SECTION'">
+          <router-link to="/mes-rapports" class="group" v-if="userStore.user.je_suis === 'SR_SR' || userStore.user.je_suis === 'SC_SC' || userStore.user.je_suis === 'SECTION'">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-cyan-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-cyan-500/30 group-hover:shadow-cyan-500/50 transition-all">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -294,7 +336,7 @@
           </router-link>
 
           <!-- Mes activités (SR_SR, SC_SC, or SECTION) -->
-          <router-link to="/mes-activites" class="group" v-if="user.je_suis === 'SR_SR' || user.je_suis === 'SC_SC' || user.je_suis === 'SECTION'">
+          <router-link to="/mes-activites" class="group" v-if="userStore.user.je_suis === 'SR_SR' || userStore.user.je_suis === 'SC_SC' || userStore.user.je_suis === 'SECTION'">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-lime-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-lime-500 to-lime-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-lime-500/30 group-hover:shadow-lime-500/50 transition-all">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -371,6 +413,9 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useUserStore } from '../../stores/user'
+
+const userStore = useUserStore()
 
 // Heure cible aujourd'hui
 const targetHour = 21;

@@ -72,16 +72,6 @@
             <span class="font-semibold text-emerald-600">Seuls les Délégués culturels, SR, Formateurs et Imams peuvent s'inscrire.</span>
           </p>
           
-          <!-- Bouton de debug (temporaire) -->
-          <div v-if="matriculeInput" class="mb-4 text-center">
-            <button
-              @click="debugMatricule"
-              class="text-xs text-gray-500 hover:text-gray-700 underline"
-              type="button"
-            >
-              🔍 Voir les détails du rôle (debug)
-            </button>
-          </div>
         </div>
 
         <div class="mb-6">
@@ -171,6 +161,7 @@
               <label class="block text-sm font-semibold text-gray-700 mb-2">Matricule *</label>
               <input
                 v-model="form.matricule_membre"
+                style="color: black;"
                 type="text"
                 required
                 class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl bg-gray-50"
@@ -182,6 +173,7 @@
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">Prénom *</label>
               <input
+                style="color: black;"
                 v-model="form.prenom"
                 type="text"
                 required
@@ -193,6 +185,7 @@
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">Nom *</label>
               <input
+              style="color: black;"
                 v-model="form.nom"
                 type="text"
                 required
@@ -204,6 +197,7 @@
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">Qualité/Rôle *</label>
               <input
+              style="color: black;"
                 v-model="form.qualite_membre"
                 type="text"
                 required
@@ -215,6 +209,7 @@
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">Téléphone</label>
               <input
+              style="color: black;"
                 v-model="form.telephone"
                 type="text"
                 class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl bg-gray-50"
@@ -222,9 +217,10 @@
               />
             </div>
 
-            <div class="md:col-span-2">
+            <div >
               <label class="block text-sm font-semibold text-gray-700 mb-2">Ville/Commune</label>
               <input
+              style="color: black;"
                 v-model="form.ville_ou_commune"
                 type="text"
                 class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl bg-gray-50"
@@ -250,6 +246,7 @@
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Contact de paiement</label>
                 <input
+                style="color: black;"
                   v-model="form.contact_paiement"
                   type="text"
                   class="w-full px-4 py-3.5 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
@@ -333,6 +330,7 @@ const form = ref({
   qualite_membre: '',
   telephone: '',
   ville_ou_commune: '',
+  sexe: '',
   contact_paiement: ''
 })
 
@@ -530,7 +528,8 @@ const verifyMatricule = async () => {
       nom: data.user.nom || '',
       qualite_membre: data.user.qualite_membre || '',
       telephone: data.user.telephone || '',
-      ville_ou_commune: data.user.ville_ou_commune || '',
+      ville_ou_commune: data.user.secretariat || '',
+      sexe: data.user.sexe || '',
       contact_paiement: ''
     }
     
@@ -554,16 +553,15 @@ const verifyMatricule = async () => {
 // Soumettre le formulaire
 const submitForm = async () => {
   isSubmitting.value = true
-  
+
   try {
-    // Préparer les données avec les valeurs par défaut
     const registrationData = {
       ...form.value,
-      somme_payee: 0, // Montant fixe, sera mis à jour après paiement
-      statut_paiement: 'non_paye', // Sera calculé côté serveur
-      reference_paiement: '' // Sera rempli après paiement
+      somme_payee: 0,
+      statut_paiement: 'non_paye',
+      reference_paiement: ''
     }
-    
+
     const response = await fetch(`${API_BASE_URL}?action=create_registration`, {
       method: 'POST',
       headers: {
@@ -572,15 +570,30 @@ const submitForm = async () => {
       },
       body: JSON.stringify(registrationData)
     })
-    
+
     const data = await response.json()
-    
+
     if (!response.ok || !data.success) {
-      alert(data.error || 'Erreur lors de l\'enregistrement')
+      alert(data.error || "Erreur lors de l'enregistrement")
       return
     }
-    
-    // Afficher le message de succès
+
+    // ✅ Si le lien Wave est présent → rediriger automatiquement
+    if (data.wave_launch_url) {
+      // Option 1 : Redirection immédiate (recommandée)
+      window.location.href = data.wave_launch_url
+
+      // Option 2 (facultative) : petit délai ou message avant redirection
+      /*
+      alert('Redirection vers la page de paiement...')
+      setTimeout(() => {
+        window.location.href = data.wave_launch_url
+      }, 1000)
+      */
+      return
+    }
+
+    // Si pas de lien (cas rare)
     showSuccessModal.value = true
   } catch (error) {
     console.error('Erreur enregistrement:', error)

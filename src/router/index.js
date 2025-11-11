@@ -26,6 +26,7 @@ import Meet from "../components/pages/Meet.vue"
 import PageProfile from "../components/pages/PageProfile.vue"
 import DocPage from "../components/pages/DocPage.vue"
 import FormationsZoom from "../components/pages/FormationsZoom.vue"
+import CimaPaye from "../components/pages/CimaPaye.vue"
 
 const routes = [
   { path: "/", name: "dashboard", component: Dashboard },
@@ -51,6 +52,7 @@ const routes = [
   { path: "/bureaux_sr", name: "bureaux_sr", component: BureauxSr },
   { path: "/BureauxSr", redirect: "/bureaux_sr" }, // Alias pour compatibilité
   { path: "/cima", name: "cima", component: Cima },
+  { path: "/cima_paye/:matricule", name: "cima_paye", component: CimaPaye },
   { path: "/meet", name: "meet", component: Meet },
   { path:"/profile",name:"profile",component:PageProfile}
 ]

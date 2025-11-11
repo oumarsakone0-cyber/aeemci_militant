@@ -7,7 +7,7 @@ const route = useRoute()
 
 // On masque le Hero si on est sur login ou inscription
 const showHero = computed(() => {
-  return !(route.name === 'login' || route.name === 'inscription')
+  return !(route.name === 'login' || route.name === 'inscription' || route.name === 'cima_paye')
 })
 </script>
 

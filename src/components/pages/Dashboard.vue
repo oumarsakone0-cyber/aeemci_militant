@@ -124,7 +124,49 @@
             </div>
           </div>
         </div>
- -->
+ -->    
+        <div
+          class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6 mb-6 md:p-8 md:mb-8 overflow-hidden relative"
+          v-if="userStore.user.je_suis === 'CE_CE' || userStore.user.je_suis === 'SR_SR' || userStore.user.je_suis === 'SR'"
+        >
+        <!-- Decorative gradient overlay -->
+         
+        <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-purple-100/50 to-transparent rounded-full blur-2xl"></div>
+        
+        <div class="relative z-10">
+          <div class="flex flex-col md:flex-row items-center gap-6">
+            <!-- Icon -->
+            <div class="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-purple-500 to-violet-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-purple-500/40">
+              <svg class="w-10 h-10 md:w-12 md:h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+              </svg>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 text-center md:text-left w-full">
+              <div class="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                <span class="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span>
+                Inscription ouverte
+              </div>
+              
+              <h3 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">Inscription CIMA</h3>
+
+              <!-- Button -->
+              <router-link to="/cima">
+                <button class="w-full bg-gradient-to-r from-purple-500 to-violet-600 text-white px-8 py-5 rounded-2xl font-bold shadow-2xl shadow-purple-500/40 hover:shadow-purple-500/60 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 text-lg md:text-xl group">
+                  <svg class="w-7 h-7 group-hover:rotate-12 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                  </svg>
+                  Inscrire un membre
+                  <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </button>
+              </router-link>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Quick Actions Section -->
       <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6 md:p-8">
@@ -152,14 +194,15 @@
           </router-link>
 
           <!-- Bibliotheque -->
+
           <router-link to="/bibliotheque" class="group">
-            <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-emerald-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <div class="w-16 h-16 mx-auto bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-500/50 transition-all">
+            <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-amber-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div class="w-16 h-16 mx-auto bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:shadow-amber-500/50 transition-all">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
+                  <path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/>
                 </svg>
               </div>
-              <div class="text-xs text-center font-semibold text-gray-700 group-hover:text-emerald-600 transition-colors leading-tight">
+              <div class="text-xs text-center font-semibold text-gray-700 group-hover:text-amber-600 transition-colors leading-tight">
                 Bibliothèque
               </div>
             </div>
@@ -168,19 +211,18 @@
           <router-link to="/documents" class="group">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-emerald-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-500/50 transition-all">
-               <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 4a8 8 0 00-8 8v5a1 1 0 001 1h2v-4H6v-2a6 6 0 0112 0v2h-1v4h2a1 1 0 001-1v-5a8 8 0 00-8-8z" />
-                  <path d="M9 19h6v-6H9v6z" />
+               <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
                 </svg>
               </div>
               <div class="text-xs text-center font-semibold text-gray-700 group-hover:text-emerald-600 transition-colors leading-tight">
-                Mes Documents
+                Documents Aeemci
               </div>
             </div>
           </router-link>
 
 
-          <!-- Coin spirituel -->
+          <!-- Coin spirituel
           <router-link to="/coins" class="group">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-violet-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-violet-500 to-violet-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-violet-500/30 group-hover:shadow-violet-500/50 transition-all">
@@ -193,8 +235,9 @@
               </div>
             </div>
           </router-link>
+           -->
 
-          <!-- Messages importants -->
+          <!-- Messages importants 
           <router-link to="/messages" class="group">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-rose-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-rose-500 to-rose-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-rose-500/30 group-hover:shadow-rose-500/50 transition-all">
@@ -207,9 +250,10 @@
               </div>
             </div>
           </router-link>
+          -->
 
           <!-- Mes livres -->
-          <router-link to="/mes_livres" class="group">
+          <router-link to="/zoom" class="group">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-amber-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:shadow-amber-500/50 transition-all">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -217,13 +261,13 @@
                 </svg>
               </div>
               <div class="text-xs text-center font-semibold text-gray-700 group-hover:text-amber-600 transition-colors leading-tight">
-                Mes<br/>livres
+                Formation Zoom
               </div>
             </div>
           </router-link>
 
           <!-- Mes Secrétariats (CE_CE only) -->
-          <router-link to="/mes_sr" class="group" v-if="user.je_suis === 'CE_CE'">
+          <router-link to="/mes_sr" class="group" v-if="userStore.user.je_suis === 'CE_CE'">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-teal-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-teal-500/30 group-hover:shadow-teal-500/50 transition-all">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -237,7 +281,7 @@
           </router-link>
 
           <!-- Mes Sous-comités (SR_SR or CE_CE) -->
-          <router-link to="/mes_sous_comites" class="group" v-if="user.je_suis === 'SR_SR' || user.je_suis === 'CE_CE'">
+          <router-link to="/mes_sous_comites" class="group" v-if="userStore.user.je_suis === 'SR_SR' || userStore.user.je_suis === 'CE_CE'">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-indigo-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-500/50 transition-all">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -245,13 +289,26 @@
                 </svg>
               </div>
               <div class="text-xs text-center font-semibold text-gray-700 group-hover:text-indigo-600 transition-colors leading-tight">
-                Mes<br/>Sous-comités
+                Mes Sous<br/>comités
+              </div>
+            </div>
+          </router-link>
+
+          <router-link to="/mes_sous_comites" class="group" v-if="userStore.user.je_suis === 'SR_SR' || userStore.user.je_suis === 'CE_CE'">
+            <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-indigo-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div class="w-16 h-16 mx-auto bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-500/50 transition-all">
+                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                </svg>
+              </div>
+              <div class="text-xs text-center font-semibold text-gray-700 group-hover:text-indigo-600 transition-colors leading-tight">
+                Mes Sections
               </div>
             </div>
           </router-link>
 
           <!-- Mon Bureau (SR_SR or SC_SC) -->
-          <router-link to="/mon-bureau" class="group" v-if="user.je_suis === 'SR_SR' || user.je_suis === 'SC_SC'">
+          <router-link to="/mon-bureau" class="group" v-if="userStore.user.je_suis === 'SR_SR' || userStore.user.je_suis === 'SC_SC'">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-yellow-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-yellow-500/30 group-hover:shadow-yellow-500/50 transition-all">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -265,7 +322,7 @@
           </router-link>
 
           <!-- Mes rapports (SR_SR, SC_SC, or SECTION) -->
-          <router-link to="/mes-rapports" class="group" v-if="user.je_suis === 'SR_SR' || user.je_suis === 'SC_SC' || user.je_suis === 'SECTION'">
+          <router-link to="/mes-rapports" class="group" v-if="userStore.user.je_suis === 'SR_SR' || userStore.user.je_suis === 'SC_SC' || userStore.user.je_suis === 'SECTION'">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-cyan-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-cyan-500/30 group-hover:shadow-cyan-500/50 transition-all">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -279,7 +336,7 @@
           </router-link>
 
           <!-- Mes activités (SR_SR, SC_SC, or SECTION) -->
-          <router-link to="/mes-activites" class="group" v-if="user.je_suis === 'SR_SR' || user.je_suis === 'SC_SC' || user.je_suis === 'SECTION'">
+          <router-link to="/mes-activites" class="group" v-if="userStore.user.je_suis === 'SR_SR' || userStore.user.je_suis === 'SC_SC' || userStore.user.je_suis === 'SECTION'">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-lime-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-lime-500 to-lime-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-lime-500/30 group-hover:shadow-lime-500/50 transition-all">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -356,6 +413,9 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useUserStore } from '../../stores/user'
+
+const userStore = useUserStore()
 
 // Heure cible aujourd'hui
 const targetHour = 21;

@@ -1,11 +1,11 @@
 <?php
 /**
- * API GESTION DES BUREAUX SR (Secrétariats Régionaux)
- * Utilise la même base de données que post_api.php
+ * API GESTION DES BUREAUX SR (Secrétariats Régionaux) - VERSION 2
+ * Structure : Un responsable peut créer un bureau et y ajouter des membres
+ * Seuls SR, Présidents de sous-comités ou Présidents de section peuvent accéder
  */
 
 // === HEADERS CORS - DOIT ÊTRE EN PREMIER ===
-// Permettre les deux ports de développement courants
 $allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:5174',
@@ -17,10 +17,8 @@ $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if (in_array($origin, $allowedOrigins)) {
     header('Access-Control-Allow-Origin: ' . $origin);
 } elseif (!empty($origin) && (strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false)) {
-    // Permettre tous les localhost pour le développement
     header('Access-Control-Allow-Origin: ' . $origin);
 } else {
-    // Fallback pour le développement local
     header('Access-Control-Allow-Origin: http://localhost:5174');
 }
 
@@ -36,30 +34,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// Désactiver l'affichage des erreurs pour éviter le HTML dans la réponse JSON
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
-// Configuration pour les gros fichiers
-ini_set('upload_max_filesize', '1024M');
-ini_set('post_max_size', '1024M');
-ini_set('max_execution_time', 300); // 5 minutes
-ini_set('max_input_time', 300);
-ini_set('memory_limit', '512M');
-
-// === CONFIG DB / CONNEXION (même que post_api.php) ===
+// === CONFIG DB ===
 $dbname = 'soget2616263';
 $username = 'soget2616263';
 $password = '0Objectif-';
 $pdo = null;
-$errors = [];
 
 $tries = [
     "mysql:host=localhost;dbname=$dbname;charset=utf8mb4",
-    "mysql:host=127.0.0.1;dbname=$dbname;charset=utf8mb4",
-    "mysql:unix_socket=/var/run/mysqld/mysqld.sock;dbname=$dbname;charset=utf8mb4",
-    "mysql:unix_socket=/var/lib/mysql/mysql.sock;dbname=$dbname;charset=utf8mb4"
+    "mysql:host=127.0.0.1;dbname=$dbname;charset=utf8mb4"
 ];
 
 foreach ($tries as $dsn) {
@@ -70,36 +57,20 @@ foreach ($tries as $dsn) {
         ]);
         break;
     } catch (PDOException $e) {
-        $errors[] = $dsn.' => '.$e->getMessage();
+        continue;
     }
 }
 
 if (!$pdo) {
-    error_log('❌ DB connection errors: '.implode(' | ', $errors));
     http_response_code(500);
-    echo json_encode(['success'=>false,'error'=>'Impossible de se connecter à la base de données','details'=>$errors]);
+    echo json_encode(['success'=>false,'error'=>'Impossible de se connecter à la base de données']);
     exit();
 }
 
-// Fonction pour envoyer les erreurs avec les headers CORS déjà définis
-function sendErrorWithCors($msg, $code=400) {
-    http_response_code($code);
-    echo json_encode(['success'=>false,'error'=>$msg,'code'=>$code,'timestamp'=>date('Y-m-d H:i:s')]);
-    exit();
-}
-
-// === FONCTIONS UTILITAIRES ===
 function sendSuccess($data=null, $message=null){
     $response = ['success'=>true];
     if ($message) $response['message'] = $message;
-    if ($data !== null) {
-        // Si $data est déjà un tableau avec 'data', l'utiliser directement
-        if (is_array($data) && isset($data['data'])) {
-            $response = array_merge($response, $data);
-        } else {
-            $response['data'] = $data;
-        }
-    }
+    if ($data !== null) $response['data'] = $data;
     $response['timestamp'] = date('Y-m-d H:i:s');
     echo json_encode($response);
     exit();
@@ -111,22 +82,66 @@ function sendError($msg, $code=400){
     exit();
 }
 
-function formatTimestamp($timestamp) {
-    $date = new DateTime($timestamp);
-    $now = new DateTime();
-    $diff = $now->getTimestamp() - $date->getTimestamp();
-    $minutes = floor($diff / 60);
-    $hours = floor($diff / 3600);
-    $days = floor($diff / 86400);
+// Fonction helper pour détecter la colonne matricule dans sr_bureaux
+function getMatriculeColumn($pdo) {
+    static $cachedCol = null;
+    if ($cachedCol !== null) {
+        return $cachedCol;
+    }
     
-    if ($minutes < 1) return 'À l\'instant';
-    if ($minutes < 60) return "Il y a {$minutes} min";
-    if ($hours < 24) return "Il y a {$hours}h";
-    if ($days < 7) return "Il y a {$days} jour" . ($days > 1 ? 's' : '');
-    return $date->format('d/m/Y');
+    try {
+        $colsResult = $pdo->query("DESCRIBE sr_bureaux");
+        $cols = $colsResult->fetchAll(PDO::FETCH_COLUMN);
+        
+        if (in_array('matricule_responsable', $cols)) {
+            $cachedCol = 'matricule_responsable';
+        } elseif (in_array('matricule_membre', $cols)) {
+            $cachedCol = 'matricule_membre';
+        } else {
+            $cachedCol = 'matricule_responsable'; // Par défaut
+        }
+    } catch(Throwable $e) {
+        error_log('Erreur détection colonne matricule: '.$e->getMessage());
+        $cachedCol = 'matricule_responsable'; // Par défaut
+    }
+    
+    return $cachedCol;
 }
 
-// === ROUTAGE ===
+// Rôles autorisés pour gérer les bureaux SR
+$authorizedRoles = [
+    'SR', 'Secrétaire Régional', 'Secretaire Regional', 'Secrétaire régional',
+    'Président', 'President', 'Président de sous-comité', 'President de sous-comite',
+    'Président sous-comité', 'President sous-comite', 'Président Sous-Comité',
+    'Président de section', 'President de section', 'Président Section'
+];
+
+function isAuthorizedRole($qualite) {
+    global $authorizedRoles;
+    if (empty($qualite)) return false;
+    
+    $qualite = trim($qualite);
+    $qualiteLower = mb_strtolower($qualite);
+    
+    // Vérification exacte
+    foreach ($authorizedRoles as $role) {
+        if (mb_strtolower(trim($role)) === $qualiteLower) {
+            return true;
+        }
+    }
+    
+    // Vérification partielle
+    if (stripos($qualite, 'secrétaire') !== false && stripos($qualite, 'régional') !== false) return true;
+    if (stripos($qualite, 'secretaire') !== false && stripos($qualite, 'regional') !== false) return true;
+    if (trim($qualite) === 'SR' || preg_match('/\bSR\b/i', $qualite)) return true;
+    if (stripos($qualite, 'président') !== false && stripos($qualite, 'sous-comité') !== false) return true;
+    if (stripos($qualite, 'president') !== false && stripos($qualite, 'sous-comite') !== false) return true;
+    if (stripos($qualite, 'président') !== false && stripos($qualite, 'section') !== false) return true;
+    if (stripos($qualite, 'president') !== false && stripos($qualite, 'section') !== false) return true;
+    
+    return false;
+}
+
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 if(empty($action)){
     $raw = file_get_contents('php://input');
@@ -134,237 +149,559 @@ if(empty($action)){
     $action = $input['action'] ?? '';
 }
 
-error_log('🟢 Action bureaux SR reçue: '.$action);
+error_log('🟢 Action bureaux SR v2 reçue: '.$action);
 
 try {
     switch($action){
         case 'ping':
-            sendSuccess(['status'=>'online','message'=>'API Bureaux SR opérationnelle','time'=>date('Y-m-d H:i:s')]);
+            sendSuccess(['status'=>'online','message'=>'API Bureaux SR v2 opérationnelle']);
             break;
             
-        case 'get_bureaux':
-            $matricule = $_GET['matricule'] ?? '';
-            if (!$matricule) {
-                sendError('Matricule requis');
+        case 'db_check':
+            // Diagnostic de la base de données
+            $checks = [];
+            try {
+                $r = $pdo->query("SELECT 1")->fetchColumn();
+                $checks['db_connection'] = (int)$r === 1;
+            } catch(Throwable $e) {
+                $checks['db_connection'] = false;
+                $checks['db_error'] = $e->getMessage();
+            }
+            
+            // Vérifier si les tables existent
+            try {
+                $tables = $pdo->query("SHOW TABLES LIKE 'sr_bureaux'")->fetchAll(PDO::FETCH_COLUMN);
+                $checks['sr_bureaux_exists'] = !empty($tables);
+            } catch(Throwable $e) {
+                $checks['sr_bureaux_exists'] = false;
+                $checks['sr_bureaux_error'] = $e->getMessage();
             }
             
             try {
-                // Vérifier si la table existe
-                $tableExists = $pdo->query("SHOW TABLES LIKE 'sr_bureaux'")->fetch();
-                if (!$tableExists) {
-                    sendError('Table sr_bureaux non trouvée. Veuillez exécuter le script SQL de création.', 404);
+                $tables = $pdo->query("SHOW TABLES LIKE 'sr_bureaux_membres'")->fetchAll(PDO::FETCH_COLUMN);
+                $checks['sr_bureaux_membres_exists'] = !empty($tables);
+            } catch(Throwable $e) {
+                $checks['sr_bureaux_membres_exists'] = false;
+                $checks['sr_bureaux_membres_error'] = $e->getMessage();
+            }
+            
+            // Vérifier la structure de sr_bureaux si elle existe
+            if ($checks['sr_bureaux_exists']) {
+                try {
+                    $cols = $pdo->query("DESCRIBE sr_bureaux")->fetchAll(PDO::FETCH_COLUMN);
+                    $checks['sr_bureaux_columns'] = $cols;
+                } catch(Throwable $e) {
+                    $checks['sr_bureaux_columns_error'] = $e->getMessage();
+                }
+            }
+            
+            sendSuccess($checks);
+            break;
+            
+        case 'check_authorization':
+            // Vérifier si l'utilisateur peut gérer les bureaux
+            $matricule = $_GET['matricule'] ?? '';
+            if (!$matricule) sendError('Matricule requis');
+            
+            try {
+                $stmt = $pdo->prepare("SELECT qualite_membre FROM aeemciste_carte_membre WHERE matricule_gen = ? LIMIT 1");
+                $stmt->execute([$matricule]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$user) {
+                    sendError('Utilisateur non trouvé', 404);
                 }
                 
-                // Récupérer les bureaux du membre
-                $stmt = $pdo->prepare("SELECT * FROM sr_bureaux WHERE matricule_membre = ? ORDER BY created_at DESC");
-                $stmt->execute([$matricule]);
-                $bureaux = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $isAuthorized = isAuthorizedRole($user['qualite_membre'] ?? '');
+                sendSuccess([
+                    'authorized' => $isAuthorized,
+                    'qualite_membre' => $user['qualite_membre'] ?? '',
+                    'message' => $isAuthorized ? 'Accès autorisé' : 'Accès non autorisé. Seuls les SR, Présidents de sous-comités et Présidents de section peuvent gérer les bureaux.'
+                ]);
+            } catch(Throwable $e) {
+                sendError('Erreur lors de la vérification: '.$e->getMessage(), 500);
+            }
+            break;
+            
+        case 'get_bureaux':
+            // Récupérer tous les bureaux d'un responsable avec leurs membres
+            $matricule = $_GET['matricule'] ?? '';
+            if (!$matricule) sendError('Matricule requis');
+            
+            try {
+                // Vérifier si les tables existent
+                try {
+                    $checkTables = $pdo->query("SHOW TABLES LIKE 'sr_bureaux'")->fetch();
+                    if (!$checkTables) {
+                        sendError('La table sr_bureaux n\'existe pas encore. Veuillez exécuter le script SQL create_sr_bureaux_structure.sql', 500);
+                    }
+                } catch(Throwable $e) {
+                    error_log('Erreur vérification table sr_bureaux: '.$e->getMessage());
+                    sendError('Erreur lors de la vérification des tables: '.$e->getMessage(), 500);
+                }
                 
+                // Vérifier l'autorisation
+                try {
+                    $stmt = $pdo->prepare("SELECT qualite_membre FROM aeemciste_carte_membre WHERE matricule_gen = ? LIMIT 1");
+                    $stmt->execute([$matricule]);
+                    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if (!$user) {
+                        sendError('Utilisateur non trouvé dans la base de données', 404);
+                    }
+                    if (!isAuthorizedRole($user['qualite_membre'] ?? '')) {
+                        sendError('Accès non autorisé. Votre rôle: '.($user['qualite_membre'] ?? 'Non défini'), 403);
+                    }
+                } catch(Throwable $e) {
+                    error_log('Erreur vérification autorisation: '.$e->getMessage());
+                    sendError('Erreur lors de la vérification de l\'autorisation: '.$e->getMessage(), 500);
+                }
+                
+                // Récupérer les bureaux (tous les bureaux pour les utilisateurs autorisés)
+                try {
+                    // Déterminer la colonne de tri (created_at ou id)
+                    $cols = [];
+                    try {
+                        $colsResult = $pdo->query("DESCRIBE sr_bureaux");
+                        $cols = $colsResult->fetchAll(PDO::FETCH_COLUMN);
+                    } catch(Throwable $e) {
+                        error_log('Erreur détection colonnes sr_bureaux: '.$e->getMessage());
+                    }
+                    
+                    $orderCol = in_array('created_at', $cols) ? 'created_at' : 'id';
+                    
+                    // Récupérer tous les bureaux (pas de filtre par matricule)
+                    $stmt = $pdo->prepare("SELECT * FROM sr_bureaux ORDER BY $orderCol DESC");
+                    $stmt->execute();
+                    $bureaux = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    
+                    // Log pour déboguer
+                    error_log('🔍 Nombre de bureaux récupérés: '.count($bureaux));
+                    if (count($bureaux) > 0) {
+                        error_log('🔍 IDs des bureaux: '.implode(', ', array_column($bureaux, 'id')));
+                    }
+                } catch(PDOException $e) {
+                    $errorMsg = $e->getMessage();
+                    error_log('Erreur récupération bureaux (PDO): '.$errorMsg);
+                    
+                    // Détecter si c'est une erreur de table inexistante
+                    if (strpos($errorMsg, "doesn't exist") !== false || strpos($errorMsg, "Table") !== false || strpos($errorMsg, "Unknown table") !== false || strpos($errorMsg, "Unknown column") !== false) {
+                        sendError('La table sr_bureaux n\'existe pas ou a une structure incorrecte. Veuillez exécuter le script SQL create_sr_bureaux_structure.sql ou migrate_sr_bureaux_to_new_structure.sql. Erreur: '.$errorMsg, 500);
+                    } else {
+                        sendError('Erreur lors de la récupération des bureaux: '.$errorMsg, 500);
+                    }
+                } catch(Throwable $e) {
+                    error_log('Erreur récupération bureaux: '.$e->getMessage());
+                    sendError('Erreur lors de la récupération des bureaux: '.$e->getMessage(), 500);
+                }
+                
+                // Pour chaque bureau, récupérer ses membres
+                foreach ($bureaux as &$bureau) {
+                    try {
+                        $membresStmt = $pdo->prepare("SELECT * FROM sr_bureaux_membres WHERE bureau_id = ? ORDER BY created_at ASC");
+                        $membresStmt->execute([$bureau['id']]);
+                        $bureau['membres'] = $membresStmt->fetchAll(PDO::FETCH_ASSOC);
+                    } catch(Throwable $e2) {
+                        error_log('Erreur récupération membres pour bureau '.$bureau['id'].': '.$e2->getMessage());
+                        $bureau['membres'] = [];
+                    }
+                }
+                
+                // Log final pour déboguer
+                error_log('✅ Envoi de '.count($bureaux).' bureaux au client');
                 
                 sendSuccess($bureaux);
             } catch(Throwable $e) {
-                error_log('Erreur get_bureaux: '.$e->getMessage());
-                sendError('Erreur lors de la récupération des bureaux: '.$e->getMessage(), 500);
+                error_log('Erreur get_bureaux (catch général): '.$e->getMessage());
+                error_log('Stack trace: '.$e->getTraceAsString());
+                sendError('Erreur inattendue lors de la récupération: '.$e->getMessage(), 500);
             }
             break;
             
         case 'create_bureau':
+            // Créer un nouveau bureau
             $input = json_decode(file_get_contents('php://input'), true);
-            $matricule = $input['matricule_membre'] ?? '';
+            $matricule = $input['matricule_responsable'] ?? '';
             $nom_bureau = $input['nom_bureau'] ?? '';
-            $poste = $input['poste'] ?? '';
-            $nom_president = $input['nom_president'] ?? '';
-            $nom_vice_president = $input['nom_vice_president'] ?? null;
-            $nom_tresorier = $input['nom_tresorier'] ?? null;
-            $nom_secretaire = $input['nom_secretaire'] ?? null;
+            $description = $input['description'] ?? null;
             $email = $input['email'] ?? null;
             $telephone = $input['telephone'] ?? null;
             $adresse = $input['adresse'] ?? null;
-            $description = $input['description'] ?? null;
             
-            if (!$matricule || !$nom_bureau || !$poste || !$nom_president) {
-                sendError('matricule_membre, nom_bureau, poste et nom_president requis');
+            if (!$matricule || !$nom_bureau) {
+                sendError('matricule_responsable et nom_bureau requis');
             }
             
             try {
-                // Vérifier si la table existe
-                $tableExists = $pdo->query("SHOW TABLES LIKE 'sr_bureaux'")->fetch();
-                if (!$tableExists) {
-                    sendError('Table sr_bureaux non trouvée. Veuillez exécuter le script SQL de création.', 404);
+                // Vérifier l'autorisation
+                $stmt = $pdo->prepare("SELECT qualite_membre FROM aeemciste_carte_membre WHERE matricule_gen = ? LIMIT 1");
+                $stmt->execute([$matricule]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                if (!$user) {
+                    sendError('Utilisateur non trouvé dans la base de données', 404);
+                }
+                $qualite = $user['qualite_membre'] ?? '';
+                if (!isAuthorizedRole($qualite)) {
+                    sendError('Accès non autorisé. Votre rôle actuel: "'.($qualite ?: 'Non défini').'". Seuls les SR, Présidents de sous-comités et Présidents de section peuvent créer des bureaux.', 403);
                 }
                 
-                // Insérer le bureau
-                $stmt = $pdo->prepare("INSERT INTO sr_bureaux (matricule_membre, nom_bureau, poste, nom_president, nom_vice_president, nom_tresorier, nom_secretaire, email, telephone, adresse, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([
-                    $matricule, 
-                    $nom_bureau, 
-                    $poste, 
-                    $nom_president,
-                    $nom_vice_president,
-                    $nom_tresorier,
-                    $nom_secretaire,
-                    $email,
-                    $telephone,
-                    $adresse,
-                    $description
-                ]);
+                // Détecter dynamiquement les colonnes disponibles
+                $cols = [];
+                try {
+                    $colsResult = $pdo->query("DESCRIBE sr_bureaux");
+                    $cols = $colsResult->fetchAll(PDO::FETCH_COLUMN);
+                } catch(Throwable $e) {
+                    error_log('Erreur détection colonnes: '.$e->getMessage());
+                }
+                
+                // Déterminer la colonne matricule
+                $matriculeCol = getMatriculeColumn($pdo);
+                
+                // Construire la requête dynamiquement
+                $insertCols = [$matriculeCol, 'nom_bureau'];
+                $insertVals = [$matricule, $nom_bureau];
+                $placeholders = ['?', '?'];
+                
+                if (in_array('description', $cols)) {
+                    $insertCols[] = 'description';
+                    $insertVals[] = $description;
+                    $placeholders[] = '?';
+                }
+                if (in_array('email', $cols)) {
+                    $insertCols[] = 'email';
+                    $insertVals[] = $email;
+                    $placeholders[] = '?';
+                }
+                if (in_array('telephone', $cols)) {
+                    $insertCols[] = 'telephone';
+                    $insertVals[] = $telephone;
+                    $placeholders[] = '?';
+                }
+                if (in_array('adresse', $cols)) {
+                    $insertCols[] = 'adresse';
+                    $insertVals[] = $adresse;
+                    $placeholders[] = '?';
+                }
+                
+                // Créer le bureau
+                $sql = "INSERT INTO sr_bureaux (".implode(', ', $insertCols).") VALUES (".implode(', ', $placeholders).")";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($insertVals);
                 $bureau_id = $pdo->lastInsertId();
                 
                 // Récupérer le bureau créé
                 $getStmt = $pdo->prepare("SELECT * FROM sr_bureaux WHERE id = ? LIMIT 1");
                 $getStmt->execute([$bureau_id]);
                 $bureau = $getStmt->fetch(PDO::FETCH_ASSOC);
+                $bureau['membres'] = [];
                 
                 sendSuccess($bureau, 'Bureau créé avec succès');
             } catch(Throwable $e) {
                 error_log('Erreur create_bureau: '.$e->getMessage());
-                sendError('Erreur lors de la création du bureau: '.$e->getMessage(), 500);
+                sendError('Erreur lors de la création: '.$e->getMessage(), 500);
             }
             break;
             
-        case 'update_bureau':
+        case 'add_membre':
+            // Ajouter un membre à un bureau
             $input = json_decode(file_get_contents('php://input'), true);
-            $id = $input['id'] ?? '';
-            $matricule = $input['matricule_membre'] ?? '';
-            $nom_bureau = $input['nom_bureau'] ?? '';
+            $bureau_id = $input['bureau_id'] ?? null;
+            $matricule_membre = $input['matricule_membre'] ?? '';
             $poste = $input['poste'] ?? '';
-            $nom_president = $input['nom_president'] ?? '';
-            $nom_vice_president = $input['nom_vice_president'] ?? null;
-            $nom_tresorier = $input['nom_tresorier'] ?? null;
-            $nom_secretaire = $input['nom_secretaire'] ?? null;
-            $email = $input['email'] ?? null;
-            $telephone = $input['telephone'] ?? null;
-            $adresse = $input['adresse'] ?? null;
-            $description = $input['description'] ?? null;
+            $matricule_responsable = $input['matricule_responsable'] ?? '';
             
-            if (!$id || !$matricule || !$nom_bureau || !$poste || !$nom_president) {
-                sendError('id, matricule_membre, nom_bureau, poste et nom_president requis');
+            if (!$bureau_id || !$matricule_membre || !$poste || !$matricule_responsable) {
+                sendError('bureau_id, matricule_membre, poste et matricule_responsable requis');
             }
             
             try {
-                // Vérifier que le bureau appartient au membre
-                $check = $pdo->prepare("SELECT id FROM sr_bureaux WHERE id = ? AND matricule_membre = ? LIMIT 1");
-                $check->execute([$id, $matricule]);
-                if (!$check->fetch()) {
-                    sendError('Bureau non trouvé ou vous n\'êtes pas autorisé à le modifier', 403);
+                // Vérifier que le responsable a le bon rôle
+                $roleStmt = $pdo->prepare("SELECT qualite_membre FROM aeemciste_carte_membre WHERE matricule_gen = ? LIMIT 1");
+                $roleStmt->execute([$matricule_responsable]);
+                $roleUser = $roleStmt->fetch(PDO::FETCH_ASSOC);
+                if (!$roleUser || !isAuthorizedRole($roleUser['qualite_membre'] ?? '')) {
+                    sendError('Accès non autorisé. Seuls les SR, Présidents de sous-comités et Présidents de section peuvent gérer les bureaux.', 403);
                 }
                 
-                // Mettre à jour le bureau
-                $stmt = $pdo->prepare("UPDATE sr_bureaux SET nom_bureau = ?, poste = ?, nom_president = ?, nom_vice_president = ?, nom_tresorier = ?, nom_secretaire = ?, email = ?, telephone = ?, adresse = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND matricule_membre = ?");
-                $stmt->execute([
-                    $nom_bureau, 
-                    $poste, 
-                    $nom_president,
-                    $nom_vice_president,
-                    $nom_tresorier,
-                    $nom_secretaire,
-                    $email,
-                    $telephone,
-                    $adresse,
-                    $description,
-                    $id, 
-                    $matricule
-                ]);
+                // Vérifier que le bureau appartient au responsable
+                $matriculeCol = getMatriculeColumn($pdo);
+                $checkStmt = $pdo->prepare("SELECT id FROM sr_bureaux WHERE id = ? AND $matriculeCol = ? LIMIT 1");
+                $checkStmt->execute([$bureau_id, $matricule_responsable]);
+                if (!$checkStmt->fetch()) {
+                    sendError('Bureau non trouvé ou accès non autorisé', 403);
+                }
                 
-                // Récupérer le bureau mis à jour
-                $getStmt = $pdo->prepare("SELECT * FROM sr_bureaux WHERE id = ? LIMIT 1");
-                $getStmt->execute([$id]);
-                $bureau = $getStmt->fetch(PDO::FETCH_ASSOC);
+                // Récupérer les infos du membre
+                $userStmt = $pdo->prepare("SELECT prenom, nom, qualite_membre, email, contact FROM aeemciste_carte_membre WHERE matricule_gen = ? LIMIT 1");
+                $userStmt->execute([$matricule_membre]);
+                $membre = $userStmt->fetch(PDO::FETCH_ASSOC);
                 
-                sendSuccess($bureau, 'Bureau modifié avec succès');
+                if (!$membre) {
+                    sendError('Membre non trouvé', 404);
+                }
+                
+                // Vérifier si le membre n'est pas déjà dans ce bureau
+                $existingStmt = $pdo->prepare("SELECT id FROM sr_bureaux_membres WHERE bureau_id = ? AND matricule_membre = ? LIMIT 1");
+                $existingStmt->execute([$bureau_id, $matricule_membre]);
+                if ($existingStmt->fetch()) {
+                    sendError('Ce membre est déjà dans ce bureau', 409);
+                }
+                
+                // Ajouter le membre
+                $nom_complet = trim(($membre['prenom'] ?? '') . ' ' . ($membre['nom'] ?? ''));
+                
+                // Détecter dynamiquement les colonnes disponibles dans sr_bureaux_membres
+                $membreCols = [];
+                try {
+                    $membreColsResult = $pdo->query("DESCRIBE sr_bureaux_membres");
+                    $membreCols = $membreColsResult->fetchAll(PDO::FETCH_COLUMN);
+                } catch(Throwable $e) {
+                    error_log('Erreur détection colonnes sr_bureaux_membres: '.$e->getMessage());
+                }
+                
+                // Construire la requête dynamiquement
+                $insertCols = ['bureau_id', 'matricule_membre', 'poste'];
+                $insertVals = [$bureau_id, $matricule_membre, $poste];
+                $placeholders = ['?', '?', '?'];
+                
+                if (in_array('poste_actuel', $membreCols)) {
+                    $insertCols[] = 'poste_actuel';
+                    $insertVals[] = $membre['qualite_membre'] ?? null;
+                    $placeholders[] = '?';
+                }
+                if (in_array('nom_complet', $membreCols) && $nom_complet) {
+                    $insertCols[] = 'nom_complet';
+                    $insertVals[] = $nom_complet;
+                    $placeholders[] = '?';
+                }
+                if (in_array('email', $membreCols) && isset($membre['email'])) {
+                    $insertCols[] = 'email';
+                    $insertVals[] = $membre['email'] ?? null;
+                    $placeholders[] = '?';
+                }
+                if (in_array('telephone', $membreCols) && isset($membre['contact'])) {
+                    $insertCols[] = 'telephone';
+                    $insertVals[] = $membre['contact'] ?? null;
+                    $placeholders[] = '?';
+                }
+                
+                $insertSql = "INSERT INTO sr_bureaux_membres (".implode(', ', $insertCols).") VALUES (".implode(', ', $placeholders).")";
+                $insertStmt = $pdo->prepare($insertSql);
+                $insertStmt->execute($insertVals);
+                
+                $membre_id = $pdo->lastInsertId();
+                
+                // Récupérer le membre ajouté
+                $getStmt = $pdo->prepare("SELECT * FROM sr_bureaux_membres WHERE id = ? LIMIT 1");
+                $getStmt->execute([$membre_id]);
+                $membreAdded = $getStmt->fetch(PDO::FETCH_ASSOC);
+                
+                sendSuccess($membreAdded, 'Membre ajouté avec succès');
+            } catch(PDOException $e) {
+                $errorMsg = $e->getMessage();
+                error_log('Erreur add_membre (PDO): '.$errorMsg);
+                
+                // Détecter les erreurs spécifiques
+                if (strpos($errorMsg, 'Duplicate entry') !== false || strpos($errorMsg, 'UNIQUE constraint') !== false) {
+                    sendError('Ce membre est déjà dans ce bureau', 409);
+                } elseif (strpos($errorMsg, "doesn't exist") !== false || strpos($errorMsg, "Unknown table") !== false) {
+                    sendError('La table sr_bureaux_membres n\'existe pas encore. Veuillez exécuter le script SQL create_sr_bureaux_structure.sql', 500);
+                } else {
+                    sendError('Erreur lors de l\'ajout: '.$errorMsg, 500);
+                }
             } catch(Throwable $e) {
-                error_log('Erreur update_bureau: '.$e->getMessage());
-                sendError('Erreur lors de la modification du bureau: '.$e->getMessage(), 500);
+                error_log('Erreur add_membre: '.$e->getMessage());
+                sendError('Erreur lors de l\'ajout: '.$e->getMessage(), 500);
+            }
+            break;
+            
+        case 'update_membre_poste':
+            // Modifier le poste d'un membre
+            $input = json_decode(file_get_contents('php://input'), true);
+            $membre_id = $input['membre_id'] ?? null;
+            $nouveau_poste = $input['poste'] ?? '';
+            $matricule_responsable = $input['matricule_responsable'] ?? '';
+            
+            if (!$membre_id || !$nouveau_poste || !$matricule_responsable) {
+                sendError('membre_id, poste et matricule_responsable requis');
+            }
+            
+            try {
+                // Vérifier que le responsable a le bon rôle
+                $roleStmt = $pdo->prepare("SELECT qualite_membre FROM aeemciste_carte_membre WHERE matricule_gen = ? LIMIT 1");
+                $roleStmt->execute([$matricule_responsable]);
+                $roleUser = $roleStmt->fetch(PDO::FETCH_ASSOC);
+                if (!$roleUser || !isAuthorizedRole($roleUser['qualite_membre'] ?? '')) {
+                    sendError('Accès non autorisé. Seuls les SR, Présidents de sous-comités et Présidents de section peuvent gérer les bureaux.', 403);
+                }
+                
+                // Vérifier que le membre appartient à un bureau du responsable
+                $matriculeCol = getMatriculeColumn($pdo);
+                $checkStmt = $pdo->prepare("
+                    SELECT m.id 
+                    FROM sr_bureaux_membres m
+                    INNER JOIN sr_bureaux b ON m.bureau_id = b.id
+                    WHERE m.id = ? AND b.$matriculeCol = ?
+                    LIMIT 1
+                ");
+                $checkStmt->execute([$membre_id, $matricule_responsable]);
+                if (!$checkStmt->fetch()) {
+                    sendError('Membre non trouvé ou accès non autorisé', 403);
+                }
+                
+                // Mettre à jour le poste
+                $updateStmt = $pdo->prepare("UPDATE sr_bureaux_membres SET poste = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?");
+                $updateStmt->execute([$nouveau_poste, $membre_id]);
+                
+                // Récupérer le membre mis à jour
+                $getStmt = $pdo->prepare("SELECT * FROM sr_bureaux_membres WHERE id = ? LIMIT 1");
+                $getStmt->execute([$membre_id]);
+                $membre = $getStmt->fetch(PDO::FETCH_ASSOC);
+                
+                sendSuccess($membre, 'Poste modifié avec succès');
+            } catch(Throwable $e) {
+                error_log('Erreur update_membre_poste: '.$e->getMessage());
+                sendError('Erreur lors de la modification: '.$e->getMessage(), 500);
+            }
+            break;
+            
+        case 'remove_membre':
+            // Retirer un membre d'un bureau
+            $input = json_decode(file_get_contents('php://input'), true);
+            $membre_id = $input['membre_id'] ?? null;
+            $matricule_responsable = $input['matricule_responsable'] ?? '';
+            
+            if (!$membre_id || !$matricule_responsable) {
+                sendError('membre_id et matricule_responsable requis');
+            }
+            
+            try {
+                // Vérifier que le responsable a le bon rôle
+                $roleStmt = $pdo->prepare("SELECT qualite_membre FROM aeemciste_carte_membre WHERE matricule_gen = ? LIMIT 1");
+                $roleStmt->execute([$matricule_responsable]);
+                $roleUser = $roleStmt->fetch(PDO::FETCH_ASSOC);
+                if (!$roleUser || !isAuthorizedRole($roleUser['qualite_membre'] ?? '')) {
+                    sendError('Accès non autorisé. Seuls les SR, Présidents de sous-comités et Présidents de section peuvent gérer les bureaux.', 403);
+                }
+                
+                // Vérifier que le membre appartient à un bureau du responsable
+                $matriculeCol = getMatriculeColumn($pdo);
+                $checkStmt = $pdo->prepare("
+                    SELECT m.id 
+                    FROM sr_bureaux_membres m
+                    INNER JOIN sr_bureaux b ON m.bureau_id = b.id
+                    WHERE m.id = ? AND b.$matriculeCol = ?
+                    LIMIT 1
+                ");
+                $checkStmt->execute([$membre_id, $matricule_responsable]);
+                if (!$checkStmt->fetch()) {
+                    sendError('Membre non trouvé ou accès non autorisé', 403);
+                }
+                
+                // Supprimer le membre
+                $deleteStmt = $pdo->prepare("DELETE FROM sr_bureaux_membres WHERE id = ?");
+                $deleteStmt->execute([$membre_id]);
+                
+                sendSuccess(null, 'Membre retiré avec succès');
+            } catch(Throwable $e) {
+                error_log('Erreur remove_membre: '.$e->getMessage());
+                sendError('Erreur lors de la suppression: '.$e->getMessage(), 500);
             }
             break;
             
         case 'delete_bureau':
+            // Supprimer un bureau (et tous ses membres)
             $input = json_decode(file_get_contents('php://input'), true);
-            $id = $input['id'] ?? '';
-            $matricule = $_GET['matricule'] ?? $input['matricule_membre'] ?? '';
+            $bureau_id = $input['bureau_id'] ?? null;
+            $matricule = $input['matricule_responsable'] ?? '';
             
-            if (!$id) {
-                sendError('id requis');
+            if (!$bureau_id || !$matricule) {
+                sendError('bureau_id et matricule_responsable requis');
             }
             
             try {
-                // Si un matricule est fourni, vérifier que le bureau appartient au membre
-                if ($matricule) {
-                    $check = $pdo->prepare("SELECT id FROM sr_bureaux WHERE id = ? AND matricule_membre = ? LIMIT 1");
-                    $check->execute([$id, $matricule]);
-                    if (!$check->fetch()) {
-                        sendError('Bureau non trouvé ou vous n\'êtes pas autorisé à le supprimer', 403);
-                    }
-                    
-                    $stmt = $pdo->prepare("DELETE FROM sr_bureaux WHERE id = ? AND matricule_membre = ?");
-                    $stmt->execute([$id, $matricule]);
-                } else {
-                    // Sinon, supprimer sans vérification (pour les admins)
-                    $stmt = $pdo->prepare("DELETE FROM sr_bureaux WHERE id = ?");
-                    $stmt->execute([$id]);
+                // Vérifier que le responsable a le bon rôle
+                $roleStmt = $pdo->prepare("SELECT qualite_membre FROM aeemciste_carte_membre WHERE matricule_gen = ? LIMIT 1");
+                $roleStmt->execute([$matricule]);
+                $roleUser = $roleStmt->fetch(PDO::FETCH_ASSOC);
+                if (!$roleUser || !isAuthorizedRole($roleUser['qualite_membre'] ?? '')) {
+                    sendError('Accès non autorisé. Seuls les SR, Présidents de sous-comités et Présidents de section peuvent gérer les bureaux.', 403);
                 }
+                
+                // Vérifier que le bureau appartient au responsable
+                $matriculeCol = getMatriculeColumn($pdo);
+                $checkStmt = $pdo->prepare("SELECT id FROM sr_bureaux WHERE id = ? AND $matriculeCol = ? LIMIT 1");
+                $checkStmt->execute([$bureau_id, $matricule]);
+                if (!$checkStmt->fetch()) {
+                    sendError('Bureau non trouvé ou accès non autorisé', 403);
+                }
+                
+                // Supprimer le bureau (les membres seront supprimés automatiquement par CASCADE)
+                $deleteStmt = $pdo->prepare("DELETE FROM sr_bureaux WHERE id = ?");
+                $deleteStmt->execute([$bureau_id]);
                 
                 sendSuccess(null, 'Bureau supprimé avec succès');
             } catch(Throwable $e) {
                 error_log('Erreur delete_bureau: '.$e->getMessage());
-                sendError('Erreur lors de la suppression du bureau: '.$e->getMessage(), 500);
+                sendError('Erreur lors de la suppression: '.$e->getMessage(), 500);
             }
             break;
             
-        case 'get_bureau':
-            // Récupérer un bureau spécifique par ID
-            $id = $_GET['id'] ?? '';
-            if (!$id) {
-                sendError('id requis');
-            }
+        case 'get_user_by_matricule':
+            // Récupérer les infos d'un utilisateur par son matricule
+            $matricule = $_GET['matricule'] ?? '';
+            if (!$matricule) sendError('Matricule requis');
             
             try {
-                $stmt = $pdo->prepare("SELECT * FROM sr_bureaux WHERE id = ? LIMIT 1");
-                $stmt->execute([$id]);
-                $bureau = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if (!$bureau) {
-                    sendError('Bureau non trouvé', 404);
+                // Détecter dynamiquement les colonnes disponibles
+                $cols = [];
+                try {
+                    $colsResult = $pdo->query("DESCRIBE aeemciste_carte_membre");
+                    $cols = $colsResult->fetchAll(PDO::FETCH_COLUMN);
+                } catch(Throwable $e) {
+                    error_log('Erreur détection colonnes: '.$e->getMessage());
                 }
                 
+                // Construire la requête avec les colonnes disponibles
+                $selectCols = ['matricule_gen', 'prenom', 'nom', 'qualite_membre'];
+                if (in_array('email', $cols)) $selectCols[] = 'email';
+                if (in_array('contact', $cols)) $selectCols[] = 'contact';
+                if (in_array('telephone', $cols)) $selectCols[] = 'telephone';
                 
-                sendSuccess($bureau);
+                $stmt = $pdo->prepare("SELECT ".implode(', ', $selectCols)." FROM aeemciste_carte_membre WHERE matricule_gen = ? LIMIT 1");
+                $stmt->execute([$matricule]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$user) {
+                    sendError('Utilisateur non trouvé', 404);
+                }
+                
+                // Déterminer le téléphone (priorité: contact > telephone)
+                $telephone = '';
+                if (isset($user['contact']) && !empty($user['contact'])) {
+                    $telephone = $user['contact'];
+                } elseif (isset($user['telephone']) && !empty($user['telephone'])) {
+                    $telephone = $user['telephone'];
+                }
+                
+                sendSuccess([
+                    'matricule' => $user['matricule_gen'] ?? $matricule,
+                    'prenom' => $user['prenom'] ?? '',
+                    'nom' => $user['nom'] ?? '',
+                    'qualite_membre' => $user['qualite_membre'] ?? '',
+                    'email' => $user['email'] ?? '',
+                    'telephone' => $telephone
+                ]);
             } catch(Throwable $e) {
-                error_log('Erreur get_bureau: '.$e->getMessage());
-                sendError('Erreur lors de la récupération du bureau: '.$e->getMessage(), 500);
+                error_log('Erreur get_user_by_matricule: '.$e->getMessage());
+                sendError('Erreur lors de la récupération: '.$e->getMessage(), 500);
             }
             break;
             
         default:
-            if (empty($action)) {
-                // Réponse par défaut si aucune action n'est fournie
-                sendSuccess([
-                    'message' => 'API Bureaux SR - Service actif',
-                    'version' => '1.0',
-                    'endpoints' => [
-                        'GET ?action=ping' => 'Vérifier le statut de l\'API',
-                        'GET ?action=get_bureaux&matricule=X' => 'Récupérer les bureaux d\'un membre',
-                        'GET ?action=get_bureau&id=X' => 'Récupérer un bureau spécifique',
-                        'POST ?action=create_bureau' => 'Créer un nouveau bureau',
-                        'POST ?action=update_bureau' => 'Modifier un bureau',
-                        'POST ?action=delete_bureau' => 'Supprimer un bureau'
-                    ]
-                ]);
-            } else {
-                sendError('Action non reconnue: '.$action);
-            }
+            sendError('Action non reconnue: '.$action, 400);
     }
-    
-} catch(Throwable $e){
-    error_log('🔥 Exception: '.$e->getMessage());
-    // Utiliser sendError qui utilise les headers CORS déjà définis
-    http_response_code(500);
-    echo json_encode([
-        'success'=>false,
-        'error'=>'Erreur serveur: '.$e->getMessage(),
-        'code'=>500,
-        'timestamp'=>date('Y-m-d H:i:s')
-    ]);
-    exit();
+} catch(Throwable $e) {
+    error_log('❌ Erreur API bureaux SR v2: '.$e->getMessage());
+    sendError('Erreur serveur: '.$e->getMessage(), 500);
 }
 

@@ -20,14 +20,13 @@ import MesLivres from "../components/pages/MesLivres.vue"
 import Avis from "../components/pages/Avis.vue"
 import MesSr from "../components/pages/MesSr.vue"
 import BureauxSr from "../components/pages/BureauxSr.vue"
-import BureauxSrMembres from "../components/pages/BureauxSrMembres.vue"
 import Cima from "../components/pages/Cima.vue"
 import Quiz from "../components/pages/Quiz.vue"
 import Meet from "../components/pages/Meet.vue"
 import PageProfile from "../components/pages/PageProfile.vue"
 import DocPage from "../components/pages/DocPage.vue"
 import FormationsZoom from "../components/pages/FormationsZoom.vue"
-import CimaPaye from "../components/pages/CimaPaye.vue"
+import MesSection from "../components/pages/MesSection.vue"
 
 const routes = [
   { path: "/", name: "dashboard", component: Dashboard },
@@ -43,6 +42,8 @@ const routes = [
   { path: "/bibliotheque", name: "bibliotheque", component: Bibliotheque },
   { path: "/zoom", name: "zoom", component: FormationsZoom },
   { path: "/documents", name: "documents", component: DocPage },
+  { path: "/mes_sections", name: "mes_sections", component: MesSection },
+
 
   { path: "/social", name: "social", component: Social },
   { path: "/coins", name: "coins", component: Coins },
@@ -52,9 +53,7 @@ const routes = [
   { path: "/mes_sr", name: "mes_sr", component: MesSr },
   { path: "/bureaux_sr", name: "bureaux_sr", component: BureauxSr },
   { path: "/BureauxSr", redirect: "/bureaux_sr" }, // Alias pour compatibilité
-  { path: "/bureaux_sr/:id/membres", name: "bureaux_sr_membres", component: BureauxSrMembres },
   { path: "/cima", name: "cima", component: Cima },
-  { path: "/cima_paye/:matricule", name: "cima_paye", component: CimaPaye },
   { path: "/meet", name: "meet", component: Meet },
   { path:"/profile",name:"profile",component:PageProfile}
 ]

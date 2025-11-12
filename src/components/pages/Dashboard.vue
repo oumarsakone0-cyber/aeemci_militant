@@ -294,7 +294,7 @@
             </div>
           </router-link>
 
-          <router-link to="/mes_sous_comites" class="group" v-if="userStore.user.je_suis === 'SR_SR' || userStore.user.je_suis === 'CE_CE'">
+          <router-link to="/mes_sections" class="group" v-if="user.je_suis === 'SR_SR' || user.je_suis === 'CE_CE'|| user.je_suis === 'SC_SC'">
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border-2 border-gray-100 hover:border-indigo-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div class="w-16 h-16 mx-auto bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl mb-3 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-500/50 transition-all">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">

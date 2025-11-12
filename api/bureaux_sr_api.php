@@ -1,8 +1,12 @@
 <?php
 /**
- * API GESTION DES BUREAUX SR (Secrétariats Régionaux) - VERSION 2
+ * API GESTION DES BUREAUX SR (Secrétariats Régionaux) - VERSION 2.1
  * Structure : Un responsable peut créer un bureau et y ajouter des membres
  * Seuls SR, Présidents de sous-comités ou Présidents de section peuvent accéder
+ * 
+ * MODIFICATION 2025-11-12: 
+ * - N'importe quel responsable autorisé peut ajouter des membres à n'importe quel bureau
+ * - Plus de vérification de propriété du bureau pour l'ajout de membres
  */
 
 // === HEADERS CORS - DOIT ÊTRE EN PREMIER ===
@@ -154,7 +158,7 @@ error_log('🟢 Action bureaux SR v2 reçue: '.$action);
 try {
     switch($action){
         case 'ping':
-            sendSuccess(['status'=>'online','message'=>'API Bureaux SR v2 opérationnelle']);
+            sendSuccess(['status'=>'online','message'=>'API Bureaux SR v2 opérationnelle','version'=>'2.1','date'=>'2025-11-12']);
             break;
             
         case 'db_check':
@@ -409,6 +413,8 @@ try {
             $poste = $input['poste'] ?? '';
             $matricule_responsable = $input['matricule_responsable'] ?? '';
             
+            error_log("🔍 ADD_MEMBRE - Données reçues: bureau_id=$bureau_id, matricule_membre=$matricule_membre, poste=$poste, matricule_responsable=$matricule_responsable");
+            
             if (!$bureau_id || !$matricule_membre || !$poste || !$matricule_responsable) {
                 sendError('bureau_id, matricule_membre, poste et matricule_responsable requis');
             }
@@ -418,17 +424,42 @@ try {
                 $roleStmt = $pdo->prepare("SELECT qualite_membre FROM aeemciste_carte_membre WHERE matricule_gen = ? LIMIT 1");
                 $roleStmt->execute([$matricule_responsable]);
                 $roleUser = $roleStmt->fetch(PDO::FETCH_ASSOC);
-                if (!$roleUser || !isAuthorizedRole($roleUser['qualite_membre'] ?? '')) {
-                    sendError('Accès non autorisé. Seuls les SR, Présidents de sous-comités et Présidents de section peuvent gérer les bureaux.', 403);
+                
+                error_log("🔍 Vérification rôle: matricule=$matricule_responsable, qualite=" . ($roleUser['qualite_membre'] ?? 'NULL'));
+                
+                if (!$roleUser) {
+                    error_log("❌ Utilisateur non trouvé: $matricule_responsable");
+                    sendError('Utilisateur non trouvé dans la base de données', 404);
                 }
                 
-                // Vérifier que le bureau appartient au responsable
-                $matriculeCol = getMatriculeColumn($pdo);
-                $checkStmt = $pdo->prepare("SELECT id FROM sr_bureaux WHERE id = ? AND $matriculeCol = ? LIMIT 1");
-                $checkStmt->execute([$bureau_id, $matricule_responsable]);
-                if (!$checkStmt->fetch()) {
-                    sendError('Bureau non trouvé ou accès non autorisé', 403);
+                $qualite = $roleUser['qualite_membre'] ?? '';
+                $isAuthorized = isAuthorizedRole($qualite);
+                
+                error_log("📋 Rôle vérifié: qualite=$qualite, autorisé=" . ($isAuthorized ? 'OUI' : 'NON'));
+                
+                if (!$isAuthorized) {
+                    error_log("❌ Accès refusé: qualite=$qualite");
+                    sendError('Accès non autorisé. Votre rôle actuel: "'.($qualite ?: 'Non défini').'". Seuls les SR, Présidents de sous-comités et Présidents de section peuvent gérer les bureaux.', 403);
                 }
+                
+                // Vérifier que le bureau existe (n'importe quel responsable autorisé peut ajouter des membres)
+                $matriculeCol = getMatriculeColumn($pdo);
+                
+                // Log pour déboguer
+                error_log("🔍 Vérification bureau: bureau_id=$bureau_id, matricule_responsable=$matricule_responsable, colonne=$matriculeCol");
+                
+                // Vérifier si le bureau existe
+                $bureauCheckStmt = $pdo->prepare("SELECT id, $matriculeCol, nom_bureau FROM sr_bureaux WHERE id = ? LIMIT 1");
+                $bureauCheckStmt->execute([$bureau_id]);
+                $bureauData = $bureauCheckStmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$bureauData) {
+                    error_log("❌ Bureau $bureau_id non trouvé");
+                    sendError('Bureau non trouvé', 404);
+                }
+                
+                error_log("📋 Bureau trouvé: " . ($bureauData['nom_bureau'] ?? 'N/A') . " (matricule_responsable=" . ($bureauData[$matriculeCol] ?? 'NULL') . ")");
+                error_log("✅ Vérification réussie: le responsable autorisé peut ajouter des membres à ce bureau");
                 
                 // Récupérer les infos du membre
                 $userStmt = $pdo->prepare("SELECT prenom, nom, qualite_membre, email, contact FROM aeemciste_carte_membre WHERE matricule_gen = ? LIMIT 1");

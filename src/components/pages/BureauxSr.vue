@@ -935,19 +935,40 @@ const addMembre = async () => {
     return
   }
 
+  if (!selectedBureauId.value) {
+    addNotification('Erreur: Bureau non sélectionné', 'error')
+    return
+  }
+
+  if (!foundUser.value || !foundUser.value.matricule) {
+    addNotification('Erreur: Membre non trouvé', 'error')
+    return
+  }
+
   isSubmitting.value = true
   try {
     const matricule = getCurrentUserMatricule()
+    if (!matricule) {
+      addNotification('Matricule non trouvé. Veuillez vous reconnecter.', 'error')
+      isSubmitting.value = false
+      return
+    }
+    
+    const requestData = {
+      action: 'add_membre',
+      bureau_id: parseInt(selectedBureauId.value), // S'assurer que c'est un nombre
+      matricule_membre: foundUser.value.matricule,
+      poste: posteFinal,
+      matricule_responsable: matricule
+    }
+    
+    console.log('📤 Ajout membre - Données envoyées:', requestData)
+    console.log('📤 Bureau ID type:', typeof requestData.bureau_id, 'value:', requestData.bureau_id)
+    
     const response = await fetch(BUREAUX_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'add_membre',
-        bureau_id: selectedBureauId.value,
-        matricule_membre: foundUser.value.matricule,
-        poste: posteFinal,
-        matricule_responsable: matricule
-      })
+      body: JSON.stringify(requestData)
     })
 
     // Parser la réponse même si le status n'est pas 200

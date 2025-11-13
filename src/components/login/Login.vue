@@ -403,4 +403,26 @@ onUnmounted(() => {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ✅ Correction affichage input en mode dark */
+input,
+textarea,
+select {
+  color: black !important; /* texte toujours visible */
+  background-color: white !important; /* fond clair pour éviter le blanc sur blanc */
+  border: 1px solid #ccc !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #888 !important; /* gris doux pour le placeholder */
+}
+
+/* ✅ Facultatif : si tu veux que le texte d’erreur reste visible aussi */
+label,
+p,
+span {
+  color: #222;
+}
+
 </style>

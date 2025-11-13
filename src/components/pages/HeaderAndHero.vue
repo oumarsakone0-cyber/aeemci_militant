@@ -283,11 +283,14 @@
 import { computed, ref, onMounted } from 'vue'
 import { useUserStore } from '../../stores/user'
 import { useRouter, useRoute } from 'vue-router'
-import { getCurrentUserMatricule } from '../../utils/database.js'
+import { getCurrentUserMatricule, getCachedUserData } from '../../utils/database.js'
 
 const userStore = useUserStore()
 const router = useRouter()
 const route = useRoute()
+
+// Accéder aux données utilisateur depuis le store
+const user = computed(() => userStore.user)
 
 const showMenu = ref(false)
 const showFiltersModal = ref(false)
@@ -400,6 +403,30 @@ const closeMenuOnClickOutside = (e) => {
 
 onMounted(() => {
   document.addEventListener('click', closeMenuOnClickOutside)
+  
+  // Le store Pinia avec persist: true charge automatiquement depuis localStorage
+  // Mais vérifions aussi les données depuis sessionStorage/localStorage pour compatibilité
+  if (!userStore.user || !userStore.isLoggedIn) {
+    try {
+      // Essayer de charger depuis sessionStorage/localStorage (compatibilité avec l'ancien système)
+      const cachedUserData = getCachedUserData()
+      if (cachedUserData && !userStore.user) {
+        userStore.user = cachedUserData
+        userStore.isLoggedIn = true
+      }
+    } catch (e) {
+      console.error('Erreur chargement données utilisateur:', e)
+    }
+  }
+  
+  // Log pour déboguer
+  console.log('👤 Données utilisateur dans HeaderAndHero:', {
+    user: user.value,
+    photo_membre: user.value?.photo_membre,
+    photo_url: user.value?.photo_url,
+    isLoggedIn: userStore.isLoggedIn,
+    storeUser: userStore.user
+  })
 })
 
 </script>
